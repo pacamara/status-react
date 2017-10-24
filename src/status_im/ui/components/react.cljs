@@ -40,7 +40,6 @@
 (def status-bar (get-class "StatusBar"))
 (def drawer-layout (adapt-class (.-default drawer)))
 
-(def list-view-class (get-class "ListView"))
 (def scroll-view (get-class "ScrollView"))
 (def web-view (get-class "WebView"))
 (def keyboard-avoiding-view-class (get-class "KeyboardAvoidingView"))
@@ -105,11 +104,6 @@
    [image {:source     {:uri (keyword (str "icon_" (name n)))}
            :resizeMode "contain"
            :style      style}]))
-
-;; TODO Migrate to new FlatList and SectionList when appropriate (see components.list). ListView will eventually get deprecated
-;; see https://facebook.github.io/react-native/docs/using-a-listview.html
-(defn list-view [props]
-  [list-view-class (merge {:enableEmptySections true} props)])
 
 (defn touchable-highlight [props content]
   [touchable-highlight-class
