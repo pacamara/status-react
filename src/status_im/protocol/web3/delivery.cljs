@@ -233,7 +233,7 @@
         (doseq [[_ {:keys [id message to type] :as data}] messages]
           ;; check each message asynchronously
           (go
-            (when (should-be-retransmitted? options data)
+            (when (and message (should-be-retransmitted? options data))
               (try
                 (let [message' (check-ttl message type ttl-config default-ttl)
                       callback (delivery-callback web3 post-error-callback data message')]

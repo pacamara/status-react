@@ -24,9 +24,9 @@
    :id     :debug-handlers-names
    :before (fn debug-handlers-names-before
              [context]
+             (log/debug "Handling re-frame event: " (first (get-coeffect context :event)))
              (when @pre-event-callback
                (@pre-event-callback (get-coeffect context :event)))
-             (log/debug "Handling re-frame event: " (first (get-coeffect context :event)))
              context)))
 
 (def check-spec
@@ -45,10 +45,10 @@
 (defn register-handler
   ([name handler] (register-handler name nil handler))
   ([name middleware handler]
-   (reg-event-db name [debug-handlers-names (when js/goog.DEBUG check-spec) middleware] handler)))
+   (reg-event-db name [debug-handlers-names #_(when js/goog.DEBUG check-spec) middleware] handler)))
 
 (def default-interceptors
-  [debug-handlers-names (when js/goog.DEBUG check-spec) (re-frame/inject-cofx :now)])
+  [debug-handlers-names #_(when js/goog.DEBUG check-spec) (re-frame/inject-cofx :now)])
 
 (defn register-handler-db
   ([name handler] (register-handler-db name nil handler))
