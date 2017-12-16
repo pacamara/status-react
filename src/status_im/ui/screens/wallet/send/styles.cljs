@@ -76,3 +76,40 @@
   {:text-align        :center
    :margin-top        22
    :margin-horizontal 92})
+
+(def advanced-button
+  {:flex-direction   :row
+   :background-color styles/color-blue6
+   :border-radius    50
+   :padding          8})
+
+(def advanced-button-wrapper
+  {:align-items :center})
+
+(def advanced-wrapper
+  {:margin-horizontal 15})
+
+(def advanced-options-wrapper
+  {:height           52
+   :background-color styles/color-white-transparent-4
+   :border-radius    4
+   :margin-top       16
+   :margin-bottom    16
+   :align-items      :center
+   :flex-direction   :row})
+
+(def advanced-options-text-wrapper
+  {:flex              1
+   :flex-direction    :row
+   :justify-content   :space-between
+   :margin-horizontal 15})
+
+(def advanced-label
+  {:text-align-vertical :center
+   :margin-left         4})
+
+(def advanced-fees-text
+  {:color styles/color-white})
+
+(def advanced-fees-details-text
+  {:color styles/color-white-transparent})

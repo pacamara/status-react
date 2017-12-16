@@ -346,6 +346,8 @@
    :wallet-invalid-address                "Invalid address: \n {{data}}"
    :wallet-invalid-chain-id               "Network does not match: \n {{data}}"
    :wallet-browse-photos                  "Browse Photos"
+   :wallet-advanced                       "Advanced"
+   :wallet-transaction-fee                "Transaction Fee"
    :validation-amount-invalid-number      "Amount is not a valid number"
    :validation-amount-is-too-precise      "Amount is too precise. The smallest unit you can send is 1 Wei (1x10^-18 ETH)"
 
