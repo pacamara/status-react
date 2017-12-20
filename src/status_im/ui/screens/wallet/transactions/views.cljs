@@ -41,7 +41,8 @@
    [toolbar/content-title (i18n/label :t/transactions)]
    (case current-tab
      :transactions-history  [toolbar/actions [(history-action (not (all-checked? filter-data)))]]
-     :unsigned-transactions nil)]) ;; TODO (andrey) implement [unsigned-action unsigned-transactions-count]
+     :unsigned-transactions nil
+     nil)]) ;; TODO (andrey) implement [unsigned-action unsigned-transactions-count]
 
 
 (defn action-buttons [{:keys [id to value] :as transaction}]

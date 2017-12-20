@@ -93,12 +93,14 @@
             changed-account  [:get :my-profile/profile]
             profile-changed? [:my-profile/changed?]
             valid-name?      [:my-profile/valid-name?]]
-    [react/keyboard-avoiding-view {:style styles/profile}
-     [status-bar]
-     [edit-my-profile-toolbar]
-     [react/view styles/edit-my-profile-form
-      [edit-profile-badge changed-account]
-      [edit-profile-status]
-      [status-prompt changed-account]]
-     (when (and valid-name? profile-changed?)
-       [sticky-button (label :t/save) #(dispatch [:my-profile/save-profile])])]))
+    [react/with-activity-indicator
+     {:timeout 200}
+     [react/keyboard-avoiding-view {:style styles/profile}
+      [status-bar]
+      [edit-my-profile-toolbar]
+      [react/view styles/edit-my-profile-form
+       [edit-profile-badge changed-account]
+       [edit-profile-status]
+       [status-prompt changed-account]]
+      (when (and valid-name? profile-changed?)
+        [sticky-button (label :t/save) #(dispatch [:my-profile/save-profile])])]]))

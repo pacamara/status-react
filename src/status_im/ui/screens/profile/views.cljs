@@ -222,9 +222,10 @@
                        :icon-opts {:color :blue}
                        :on-press  (show-qr current-account :public-key public-key)}]]
       [common/form-spacer]
-      [react/view styles/profile-info-container
-       [my-profile-info current-account]
-       [common/bottom-shadow]]]]))
+      [react/with-activity-indicator {}
+       [react/view styles/profile-info-container
+        [my-profile-info current-account]
+        [common/bottom-shadow]]]]]))
 
 (defview profile []
   (letsubs [{:keys [pending?

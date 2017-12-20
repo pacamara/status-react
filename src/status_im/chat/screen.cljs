@@ -99,9 +99,19 @@
                               (let [height (.. event -nativeEvent -layout -height)]
                                 (when (not= height layout-height)
                                   (re-frame/dispatch [:set-layout-height height]))))}
-     [chat-toolbar]
-     [messages-view chat-id group-chat]
-     [input/container {:text-empty? (string/blank? input-text)}]
+     [react/with-activity-indicator
+      {}
+      [chat-toolbar]]
+     [react/with-activity-indicator
+      {:timeout 150
+       :style   {:flex        1
+                 :align-items :center
+                 :justify-content :center}}
+      [messages-view chat-id group-chat]]
+     [react/with-activity-indicator
+      {:style {:flex            1
+               :justify-content :center}}
+      [input/container {:text-empty? (string/blank? input-text)}]]
      (when show-actions?
        [actions/actions-view])
      (when show-bottom-info?

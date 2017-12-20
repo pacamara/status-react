@@ -30,7 +30,8 @@
                     amount
                     decimals
                     usd-value]} [:token-balance]]
-    [react/view components.styles/flex
+    [react/view [react/text "STUB"]]
+    #_[react/view components.styles/flex
      [react/view {:style assets.styles/total-balance-container}
       [react/view {:style assets.styles/total-balance}
        [react/text {:style assets.styles/total-balance-value} (money/to-fixed (money/token->unit (or amount (money/bignumber 0)) decimals))]
