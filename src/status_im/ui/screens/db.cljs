@@ -15,7 +15,7 @@
             status-im.ui.screens.network-settings.db))
 
 ;; initial state of app-db
-(def app-db {:current-public-key         ""
+(def app-db {:current-public-key         nil
              :status-module-initialized? (or platform/ios? js/goog.DEBUG)
              :keyboard-height            0
              :accounts/accounts          {}
@@ -155,8 +155,7 @@
                   :chat/message-data
                   :chat/message-status 
                   :chat/selected-participants
-                  :chat/chat-loaded-callbacks
-                  :chat/command-hash-valid?
+                  :chat/chat-loaded-callbacks 
                   :chat/public-group-topic
                   :chat/confirmation-code-sms-listener
                   :chat/messages
