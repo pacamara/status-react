@@ -97,4 +97,3 @@ class WalletViewObject(BaseViewObject):
         if percentage_diff > 2:
             errors.append('Difference between current (%s) and expected (%s) USD balance > 2%%!!' % (usd, expected_usd))
         logging.info('Current USD balance %s is ok' % usd)
-

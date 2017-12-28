@@ -15,14 +15,14 @@ node ('macos1') {
     stage('Git & Dependencies') {
       slackSend color: 'good', message: BRANCH_NAME + ' build started. ' + env.BUILD_URL
 
-      git([url: 'https://github.com/status-im/status-react.git', branch: BRANCH_NAME])
-
+      checkout scm
       sh 'git checkout -- .'
       sh 'git checkout develop'
       sh 'git checkout ' + BRANCH_NAME
+      
       sh 'rm -rf node_modules'
       sh 'cp .env.jenkins .env'
-      sh 'lein deps && npm install && ./node_modules/re-natal/index.js deps'
+      sh 'lein deps && npm install'
       sh '[ -f node_modules/react-native/packager/src/JSTransformer/index.js ] && sed -i "" "s/301000/1201000/g" node_modules/react-native/packager/src/JSTransformer/index.js || echo "New packager"'
 
       // Fix silly RN upgrade weird env issue
