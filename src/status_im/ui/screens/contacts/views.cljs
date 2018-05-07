@@ -8,14 +8,13 @@
                                                                   native-action-button-item]]
             [status-im.ui.components.toolbar.view :as toolbar]
             [status-im.ui.components.toolbar.actions :as act]
-            [status-im.ui.components.drawer.view :as drawer]
             [status-im.ui.components.icons.custom-icons :refer [ion-icon]]
             [status-im.ui.components.contact.contact :refer [contact-view]]
             [status-im.utils.platform :refer [platform-specific ios? android?]]
             [status-im.utils.utils :as u]
             [status-im.i18n :refer [label]]
             [status-im.ui.screens.contacts.styles :as st]
-            [status-im.ui.screens.chats-list.styles :as chats-list.styles]
+            [status-im.ui.screens.home.styles :as home.styles]
             [status-im.ui.components.styles :refer [color-blue]]))
 
 (def ^:const contacts-limit 5)
@@ -32,7 +31,6 @@
 
 (defn toolbar-view []
   [toolbar/toolbar {}
-   [toolbar/nav-button (act/hamburger drawer/open-drawer!)]
    [toolbar/content-title (label :t/contacts)]
    [toolbar/actions
     (toolbar-actions)]])
@@ -114,7 +112,7 @@
      :buttonColor         :#9b59b6
      :onPress             #(dispatch [:navigate-to :new-contact])}
     [ion-icon {:name  :md-create
-               :style chats-list.styles/create-icon}]]])
+               :style home.styles/create-icon}]]])
 
 (defview contact-groups-list [_]
   (letsubs [contacts       [:get-added-contacts-with-limit contacts-limit]

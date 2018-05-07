@@ -31,7 +31,6 @@ prepare: ##@prepare Install dependencies and prepare workspace
 	npm install
 	./re-natal deps
 	./re-natal use-figwheel
-	lein re-frisk use-re-natal
 	./re-natal enable-source-maps
 
 prepare-ios: prepare ##@prepare Install iOS specific dependencies
@@ -79,13 +78,13 @@ prod-build:
 # -------------
 
 repl: ##@repl Start REPL for iOS and Android
-	BUILD_IDS="ios,android" lein repl
+	lein figwheel-repl ios android
 
 repl-ios: ##@repl Start REPL for iOS
-	BUILD_IDS="ios" lein repl
+	lein figwheel-repl ios
 
 repl-android: ##@repl Start REPL for Android
-	BUILD_IDS="android" lein repl
+	lein figwheel-repl android
 
 #--------------
 # Run

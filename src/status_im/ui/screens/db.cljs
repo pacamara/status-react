@@ -1,8 +1,9 @@
 (ns status-im.ui.screens.db
   (:require-macros [status-im.utils.db :refer [allowed-keys]])
-  (:require [status-im.constants :as constants]
+  (:require [cljs.spec.alpha :as spec]
+            [status-im.constants :as constants]
             [status-im.utils.platform :as platform]
-            [cljs.spec.alpha :as spec]
+            [status-im.utils.ethereum.core :as ethereum]
             status-im.ui.screens.accounts.db
             status-im.ui.screens.contacts.db
             status-im.ui.screens.qr-scanner.db
@@ -14,8 +15,13 @@
             status-im.ui.screens.discover.db
             status-im.ui.screens.network-settings.db))
 
+(def transaction-send-default
+  {:symbol    :ETH
+   :gas       ethereum/default-transaction-gas
+   :gas-price ethereum/default-gas-price})
+
 ;; initial state of app-db
-(def app-db {:current-public-key         ""
+(def app-db {:current-public-key         nil
              :status-module-initialized? (or platform/ios? js/goog.DEBUG)
              :keyboard-height            0
              :accounts/accounts          {}
@@ -33,6 +39,7 @@
              :tags                       []
              :sync-state                 :done
              :wallet.transactions        constants/default-wallet-transactions
+             :wallet                     {:send-transaction transaction-send-default}
              :wallet-selected-asset      {}
              :prices                     {}
              :notifications              {}
@@ -112,7 +119,6 @@
                   :my-profile/drawer
                   :my-profile/profile
                   :my-profile/default-name
-                  :wallet/request-transaction
                   :networks/selected-network
                   :networks/networks
                   :node/after-start
@@ -155,8 +161,7 @@
                   :chat/message-data
                   :chat/message-status 
                   :chat/selected-participants
-                  :chat/chat-loaded-callbacks
-                  :chat/command-hash-valid?
+                  :chat/chat-loaded-callbacks 
                   :chat/public-group-topic
                   :chat/confirmation-code-sms-listener
                   :chat/messages

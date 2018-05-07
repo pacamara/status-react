@@ -6,9 +6,10 @@
 (def item
   {:flex-direction :row})
 
-(def item-text-view
-  {:flex           1
-   :flex-direction :column})
+(def item-content-view
+  {:flex            1
+   :flex-direction  :column
+   :justify-content :center})
 
 (def item-checkbox
   {:flex            1
@@ -61,6 +62,10 @@
   (merge
     base-separator
     {:margin-left   70}))
+
+(defstyle list-header-footer-spacing
+  {:android {:background-color styles/color-white
+             :height           8}})
 
 (defstyle section-separator
   (merge base-separator

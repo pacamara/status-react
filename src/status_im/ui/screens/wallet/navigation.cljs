@@ -1,11 +1,13 @@
 (ns status-im.ui.screens.wallet.navigation
   (:require [re-frame.core :as re-frame]
+            [status-im.ui.screens.db :as db]
             [status-im.ui.screens.navigation :as navigation]
-            [status-im.ui.screens.wallet.main.views :as main]))
+            [status-im.utils.ethereum.core :as ethereum]
+            [status-im.utils.ethereum.tokens :as tokens]))
 
 (defmethod navigation/preload-data! :wallet
   [db _]
-  (re-frame/dispatch [:update-wallet (map :symbol (main/tokens-for (:network db)))])
+  (re-frame/dispatch [:update-wallet (map :symbol (tokens/tokens-for (ethereum/network->chain-keyword (:network db))))])
   (assoc-in db [:wallet :current-tab] 0))
 
 (defmethod navigation/preload-data! :transactions-history
@@ -14,11 +16,13 @@
   db)
 
 (defmethod navigation/preload-data! :wallet-request-transaction
-  [db _]
-  (dissoc db :wallet/request-transaction))
+  [db [event]]
+  (if (= event :navigate-back)
+    db
+    (update db :wallet dissoc :request-transaction)))
 
 (defmethod navigation/preload-data! :wallet-send-transaction
   [db [event]]
   (if (= event :navigate-back)
     db
-    (update db :wallet dissoc :send-transaction)))
+    (assoc-in db [:wallet :send-transaction] db/transaction-send-default)))

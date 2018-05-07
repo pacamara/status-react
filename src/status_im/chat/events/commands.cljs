@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [re-frame.core :as re-frame]
             [taoensso.timbre :as log]
-            [status-im.utils.handlers :as handlers] 
+            [status-im.utils.handlers :as handlers]
             [status-im.i18n :as i18n]
             [status-im.utils.platform :as platform]))
 
@@ -39,7 +39,8 @@
             to          (get-in contacts [chat-id :address])
             jail-params {:parameters params
                          :context    (generate-context current-account-id chat-id to group-id)}]
-        {:call-jail {:jail-id                 jail-id
+        {:db        db
+         :call-jail {:jail-id                 jail-id
                      :path                    path
                      :params                  jail-params
                      :callback-events-creator (fn [jail-response]

@@ -1,10 +1,11 @@
 (ns status-im.chat.events
-  (:require [re-frame.core :as re-frame]
+  (:require-macros [cljs.core.async.macros :as async])
+  (:require [cljs.core.async :as async]
+            [re-frame.core :as re-frame]
             [taoensso.timbre :as log]
             [status-im.utils.handlers :as handlers]
             [status-im.utils.gfycat.core :as gfycat]
             [status-im.chat.models :as model]
-            [status-im.chat.models.unviewed-messages :as unviewed-messages-model]
             [status-im.chat.console :as console-chat]
             [status-im.chat.constants :as chat-const]
             [status-im.data-store.messages :as msg-store]
@@ -21,6 +22,7 @@
             status-im.chat.events.commands
             status-im.chat.events.requests
             status-im.chat.events.animation
+            status-im.chat.events.queue-message
             status-im.chat.events.receive-message
             status-im.chat.events.sign-up
             status-im.chat.events.console
@@ -31,7 +33,8 @@
 (re-frame/reg-cofx
   :stored-unviewed-messages
   (fn [cofx _]
-    (assoc cofx :stored-unviewed-messages (messages-store/get-unviewed))))
+    (assoc cofx :stored-unviewed-messages
+           (msg-store/get-unviewed (-> cofx :db :current-public-key)))))
 
 (re-frame/reg-cofx
   :get-stored-message
@@ -53,13 +56,19 @@
   (fn [cofx _]
     (assoc cofx :get-stored-chat chats-store/get-by-id)))
 
-
 ;;;; Effects
+
+(def ^:private update-message-queue (async/chan 100))
+
+(async/go-loop [message (async/<! update-message-queue)]
+  (when message
+    (messages-store/update-message message)
+    (recur (async/<! update-message-queue))))
 
 (re-frame/reg-fx
   :update-message
   (fn [message]
-    (messages-store/update-message message)))
+    (async/put! update-message-queue message)))
 
 (re-frame/reg-fx
   :save-message
@@ -170,16 +179,16 @@
       (if account-creation?
         {:db db
          :dispatch load-default-contacts-event}
-        (let [chat->unviewed-messages (unviewed-messages-model/index-unviewed-messages stored-unviewed-messages)
-              chat->message-id->request (reduce (fn [acc {:keys [chat-id message-id] :as request}]
+        (let [chat->message-id->request (reduce (fn [acc {:keys [chat-id message-id] :as request}]
                                                   (assoc-in acc [chat-id message-id] request))
                                                 {}
                                                 stored-unanswered-requests)
               chats (reduce (fn [acc {:keys [chat-id] :as chat}]
-                              (assoc acc chat-id (assoc chat
-                                                   :unviewed-messages (get chat->unviewed-messages chat-id)
-                                                   :requests (get chat->message-id->request chat-id)
-                                                   :messages (index-messages (get-stored-messages chat-id)))))
+                              (assoc acc chat-id
+                                     (assoc chat
+                                            :unviewed-messages (get stored-unviewed-messages chat-id)
+                                            :requests (get chat->message-id->request chat-id)
+                                            :messages (index-messages (get-stored-messages chat-id)))))
                             {}
                             all-stored-chats)]
           (-> db
@@ -190,23 +199,22 @@
 (handlers/register-handler-fx
   :send-seen!
   [re-frame/trim-v]
-  (fn [{:keys [db]} [{:keys [message-id chat-id from]}]]
-    (let [{:keys [web3 current-public-key chats]
-           :contacts/keys [contacts]} db
-          {:keys [group-chat public?]} (get chats chat-id)]
+  (fn [{:keys [db]} [{:keys [chat-id from me message-id]}]]
+    (let [{:keys [web3 chats] :contacts/keys [contacts]} db
+          {:keys [group-chat public? messages]} (get chats chat-id)
+          statuses (assoc (get-in messages [message-id :user-statuses]) me :seen)]
       (cond-> {:db (-> db
-                       (unviewed-messages-model/remove-unviewed-message chat-id message-id)
-                       (assoc-in [:chats chat-id :messages message-id :message-status] :seen))
-               :update-message {:message-id     message-id
-                                :message-status :seen}}
-        (and (not (get-in contacts [chat-id] :dapp?))
-             (not public?))
-        (assoc :protocol-send-seen
-               {:web3    web3
-                :message (cond-> {:from       current-public-key
-                                  :to         from
-                                  :message-id message-id}
-                           group-chat (assoc :group-id chat-id))})))))
+                       (update-in [:chats chat-id :unviewed-messages] disj message-id)
+                       (assoc-in [:chats chat-id :messages message-id :user-statuses] statuses))
+               :update-message {:message-id    message-id
+                                :user-statuses statuses}}
+        ;; for public chats and 1-1 bot/dapp chats, it makes no sense to signalise `:seen` msg
+        (not (or public? (get-in contacts [chat-id] :dapp?)))
+        (assoc :protocol-send-seen {:web3    web3
+                                    :message (cond-> {:from       me
+                                                      :to         from
+                                                      :message-id message-id}
+                                               group-chat (assoc :group-id chat-id))})))))
 
 (handlers/register-handler-fx
   :show-mnemonic

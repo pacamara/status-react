@@ -2,6 +2,17 @@ env.LANG="en_US.UTF-8"
 env.LANGUAGE="en_US.UTF-8"
 env.LC_ALL="en_US.UTF-8"
 
+def installJSDeps() {
+    def attempt = 1
+    def maxAttempts = 10
+    def installed = false
+    while (!installed && attempt <= maxAttempts) {
+        println "#${attempt} attempt to install npm deps"
+        sh 'npm install'
+        installed = fileExists('node_modules/web3/index.js')
+    }
+}
+
 node ('macos1') {
   def apkUrl = ''
   def ipaUrl = ''
@@ -13,16 +24,17 @@ node ('macos1') {
   try {
 
     stage('Git & Dependencies') {
-      slackSend color: 'good', message: BRANCH_NAME + ' build started. ' + env.BUILD_URL
+      slackSend color: 'good', message: BRANCH_NAME + '(' + env.CHANGE_BRANCH + ') build started. ' + env.BUILD_URL
 
       checkout scm
       sh 'git checkout -- .'
       sh 'git checkout develop'
-      sh 'git checkout ' + BRANCH_NAME
-      
+      sh 'git checkout remotes/origin/' + BRANCH_NAME
+
       sh 'rm -rf node_modules'
       sh 'cp .env.jenkins .env'
-      sh 'lein deps && npm install'
+      sh 'lein deps'
+      installJSDeps()
       sh '[ -f node_modules/react-native/packager/src/JSTransformer/index.js ] && sed -i "" "s/301000/1201000/g" node_modules/react-native/packager/src/JSTransformer/index.js || echo "New packager"'
 
       // Fix silly RN upgrade weird env issue

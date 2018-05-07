@@ -16,19 +16,19 @@
 ;;
 ;; TESTFAIRY_ENABLED - indefinite
 ;; STUB_STATUS_GO - indefinite
-;; NOTIFICATIONS_WIP_ENABLED - in 0.9.12 release, remove in develop if all goes well
 ;; ERC20_ENABLED - until idea #3 is merged, remove in develop when ready
 ;; OFFLINE_INBOX_ENABLED - TBD, tenatively until #idea 1 is merged
 
 (def testfairy-enabled? (enabled? (get-config :TESTFAIRY_ENABLED)))
-(def notifications-wip-enabled? (enabled? (get-config :NOTIFICATIONS_WIP_ENABLED 0)))
 (def stub-status-go? (enabled? (get-config :STUB_STATUS_GO 0)))
 (def mainnet-networks-enabled? (enabled? (get-config :MAINNET_NETWORKS_ENABLED 0)))
 (def erc20-enabled? (enabled? (get-config :ERC20_ENABLED 0)))
 (def offline-inbox-enabled? (enabled? (get-config :OFFLINE_INBOX_ENABLED 0)))
+(def offline-inbox-many-enabled? (enabled? (get-config :OFFLINE_INBOX_MANY_ENABLED 0)))
 (def log-level
   (-> (get-config :LOG_LEVEL "error")
       string/lower-case
       keyword))
 
 (def jsc-enabled? (enabled? (get-config :JSC_ENABLED 0)))
+(def queue-message-enabled? (enabled? (get-config :QUEUE_MESSAGE_ENABLED 0)))

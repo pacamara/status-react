@@ -6,13 +6,13 @@
             [status-im.ui.components.react :as react]
             [status-im.ui.components.status-bar.view :as status-bar]
             [status-im.ui.components.styles :as styles]
-            [status-im.ui.components.tabs.views :as tabs]
             [status-im.ui.components.toolbar.actions :as actions]
             [status-im.ui.components.toolbar.view :as toolbar]
             [status-im.i18n :as i18n]
             [status-im.ui.screens.wallet.transactions.styles :as transactions.styles]
             [status-im.ui.screens.wallet.views :as wallet.views]
-            [status-im.utils.money :as money])
+            [status-im.utils.money :as money]
+            [status-im.ui.components.styles :as common.styles])
   (:require-macros [status-im.utils.views :refer [defview letsubs]]))
 
 (defn on-delete-transaction
@@ -52,8 +52,8 @@
    [button/secondary-button {:on-press #(on-delete-transaction transaction)}
     (i18n/label :t/delete)]])
 
-(defn- inbound? [type] (= "inbound" type))
-(defn- unsigned? [type] (= "unsigned" type))
+(defn- inbound? [type] (= :inbound type))
+(defn- unsigned? [type] (= :unsigned type))
 
 (defn- transaction-icon [k background-color color]
   {:icon      k
@@ -146,17 +146,16 @@
     [list/item-primary label]
     [list/item-secondary symbol]]])
 
-(defn- item-filter-type [{:keys [id label checked?]}]
-  (let [kid (keyword id)]
-    [item-filter {:icon (transaction-type->icon kid) :checked? checked? :path {:type kid}}
-     [list/item-content
-      [list/item-primary-only label]]]))
+(defn- render-item-filter [{:keys [id label checked?]}]
+  [item-filter {:icon (transaction-type->icon id) :checked? checked? :path {:type id}}
+   [list/item-content
+    [list/item-primary-only label]]])
 
 (defn- wrap-filter-data [m]
   ;; TODO(jeluard) Restore tokens filtering once token support is added
   [{:title      (i18n/label :t/transactions-filter-type)
     :key        :type
-    :renderItem (list/wrap-render-fn item-filter-type)
+    :render-fn  render-item-filter ;(list/wrap-render-fn item-filter-type)
     :data       (:type m)}])
 
 (defview filter-history []
@@ -188,11 +187,21 @@
 
 (def tabs-list
   [{:view-id :transactions-history
-    :content history-tab
-    :screen history-list}
+    :content history-tab}
    {:view-id :unsigned-transactions
-    :content unsigned-tab
-    :screen unsigned-list}])
+    :content unsigned-tab}])
+
+(defn tab [view-id content active?]
+  [react/touchable-highlight {:style    common.styles/flex
+                              :disabled active?
+                              :on-press #(re-frame/dispatch [:navigation-replace view-id])}
+   [react/view {:style (transactions.styles/tab active?)}
+    [content active?]]])
+
+(defn tabs [current-view-id]
+  [react/view {:style transactions.styles/tabs-container}
+   (for [{:keys [content view-id]} tabs-list]
+     ^{:key view-id} [tab view-id content (= view-id current-view-id)])])
 
 (defview transactions []
   (letsubs [unsigned-transactions-count [:wallet.transactions/unsigned-transactions-count]
@@ -201,14 +210,17 @@
     [react/view {:style styles/flex}
      [status-bar/status-bar]
      [toolbar-view current-tab unsigned-transactions-count filter-data]
-     [tabs/swipable-tabs tabs-list current-tab true
-      {:navigation-event     :navigation-replace
-       :tab-style            transactions.styles/tab
-       :tabs-container-style transactions.styles/tabs-container}]]))
+     [tabs current-tab]
+     [(case current-tab
+        :transactions-history history-list
+        :unsigned-transactions unsigned-list)]]))
 
 (defn- pretty-print-asset [symbol amount]
   (case symbol
-    "ETH" (if amount (money/wei->str :eth amount) "...")))
+    ;; TODO (jeluard) Format tokens amount once tokens history is supported
+    :ETH (if amount (money/wei->str :eth amount) "...")
+    (throw (str "Unknown asset symbol: " symbol))))
+
 
 (defn details-header [{:keys [value date type symbol]}]
   [react/view {:style transactions.styles/details-header}
@@ -267,8 +279,8 @@
 
 (defview transaction-details []
   (letsubs [{:keys [hash url type] :as transaction} [:wallet.transactions/transaction-details]
-            confirmations                            [:wallet.transactions.details/confirmations]
-            confirmations-progress                   [:wallet.transactions.details/confirmations-progress]]
+            confirmations                           [:wallet.transactions.details/confirmations]
+            confirmations-progress                  [:wallet.transactions.details/confirmations-progress]]
     [react/view {:style styles/flex}
      [status-bar/status-bar]
      [toolbar/toolbar {}

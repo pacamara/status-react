@@ -1,7 +1,5 @@
-(ns status-im.chat.handlers
-  (:require-macros [cljs.core.async.macros :as am])
-  (:require [re-frame.core :refer [enrich after debug dispatch reg-fx]]
-            [cljs.core.async :as a]
+(ns status-im.chat.handlers 
+  (:require [re-frame.core :refer [enrich after debug dispatch reg-fx]] 
             [clojure.string :as string]
             [status-im.ui.components.styles :refer [default-chat-color]]
             [status-im.chat.constants :as chat-consts]
@@ -28,16 +26,18 @@
     (messages/delete-by-chat-id id)))
 
 (defn delete-messages!
-  [{:keys [current-chat-id]} [_ chat-id]]
-  (let [id (or chat-id current-chat-id)]
-    (messages/delete-by-chat-id id)))
+  [{:keys [current-chat-id chats]} [_ chat-id]]
+  (let [id                   (or chat-id current-chat-id)
+        {:keys [group-chat]} (chats/get-by-id chat-id)]
+    (when group-chat
+      (messages/delete-by-chat-id id))))
 
 (defn delete-chat!
   [_ [_ chat-id]]
-  (let [{:keys [debug? group-chat]} (chats/get-by-id chat-id)]
-    (if (and (not debug?) group-chat)
-      (chats/set-inactive chat-id)
-      (chats/delete chat-id))))
+  (let [{:keys [debug?]} (chats/get-by-id chat-id)]
+    (if debug?
+      (chats/delete chat-id)
+      (chats/set-inactive chat-id))))
 
 (defn remove-pending-messages!
   [_ [_ chat-id]]
@@ -46,7 +46,7 @@
 (register-handler
   :leave-group-chat
   ;; todo order of operations tbd
-  (after (fn [_ _] (dispatch [:navigation-replace :chat-list])))
+  (after (fn [_ _] (dispatch [:navigation-replace :home])))
   (u/side-effect!
    (fn [{:keys [web3 current-chat-id chats current-public-key]} _]
      (let [{:keys [public-key private-key public?]} (chats current-chat-id)]
@@ -134,7 +134,7 @@
           ::save-public-chat chat
           ::start-watching-group (merge {:group-id topic}
                                         (select-keys db [:web3 :current-public-key]))})
-       {:dispatch-n [[:navigate-to-clean :chat-list]
+       {:dispatch-n [[:navigate-to-clean :home]
                      [:navigate-to-chat topic]]}))))
 
 (reg-fx
@@ -205,7 +205,7 @@
        ::save-chat new-chat
        ::start-listen-group (merge {:new-chat new-chat}
                                    (select-keys db [:web3 :current-public-key]))
-       :dispatch-n [[:navigate-to-clean :chat-list]
+       :dispatch-n [[:navigate-to-clean :home]
                     [:navigate-to-chat (:chat-id new-chat)]]})))
 
 (register-handler-fx

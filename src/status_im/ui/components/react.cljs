@@ -1,6 +1,7 @@
 (ns status-im.ui.components.react
   (:require-macros [status-im.utils.views :as views])
-  (:require [reagent.core :as r]
+  (:require [clojure.string :as string]
+            [reagent.core :as r]
             [status-im.ui.components.styles :as st]
             [status-im.utils.utils :as u]
             [status-im.utils.platform :refer [platform-specific ios?]]
@@ -24,7 +25,6 @@
 (def dismiss-keyboard! rn-dependencies/dismiss-keyboard)
 (def orientation rn-dependencies/orientation)
 (def back-handler (get-react-property "BackHandler"))
-(def drawer rn-dependencies/drawer)
 
 (def splash-screen (.-SplashScreen native-modules))
 
@@ -38,9 +38,7 @@
 (def view (get-class "View"))
 
 (def status-bar (get-class "StatusBar"))
-(def drawer-layout (adapt-class (.-default drawer)))
 
-(def list-view-class (get-class "ListView"))
 (def scroll-view (get-class "ScrollView"))
 (def web-view (get-class "WebView"))
 (def keyboard-avoiding-view-class (get-class "KeyboardAvoidingView"))
@@ -55,7 +53,10 @@
 (def activity-indicator (get-class "ActivityIndicator"))
 
 (def modal (get-class "Modal"))
-(def picker (get-class "Picker"))
+(def picker-class (get-class "Picker"))
+(def picker-item-class
+  (when-let [picker (get-react-property "Picker")]
+    (adapt-class (.-Item picker))))
 
 (def pan-responder (.-PanResponder rn-dependencies/react-native))
 (def animated (.-Animated rn-dependencies/react-native))
@@ -82,7 +83,7 @@
   ([{:keys [uppercase?] :as opts} t & ts]
    (r/as-element
      (let [ts (cond->> (conj ts t)
-                       uppercase? (map clojure.string/upper-case))]
+                       uppercase? (map #(when % (string/upper-case %))))]
        (vec (concat
               [text-class (add-font-style :style opts)]
               ts))))))
@@ -106,19 +107,10 @@
            :resizeMode "contain"
            :style      style}]))
 
-;; TODO Migrate to new FlatList and SectionList when appropriate (see components.list). ListView will eventually get deprecated
-;; see https://facebook.github.io/react-native/docs/using-a-listview.html
-(defn list-view [props]
-  [list-view-class (merge {:enableEmptySections true} props)])
-
 (defn touchable-highlight [props content]
   [touchable-highlight-class
    (merge {:underlay-color :transparent} props)
    content])
-
-(def picker-item
-  (when-let [picker (get-react-property "Picker")]
-    (adapt-class (.-Item picker))))
 
 (defn get-dimensions [name]
   (js->clj (.get dimensions name) :keywordize-keys true))
@@ -130,6 +122,14 @@
 
 (defn list-item [component]
   (r/as-element component))
+
+(defn picker
+  ([{:keys [style item-style selected on-change]} items]
+   [picker-class {:selectedValue selected :style style :itemStyle item-style :onValueChange on-change}
+    (for [{:keys [label value]} items]
+      ^{:key (str value)}
+      [picker-item-class
+       {:label (or label value) :value value}])]))
 
 ;; Image picker
 
@@ -146,8 +146,6 @@
         (.openPicker (clj->js {:multiple false}))
         (.then images-fn)
         (.catch show-access-error))))
-
-(def swiper (adapt-class rn-dependencies/swiper))
 
 ;; Clipboard
 

@@ -29,6 +29,9 @@
    :switch-users                          "Switch users"
    :current-network                       "Current network"
 
+   ;;home
+   :home                                  "Home"
+
    ;;chat
    :is-typing                             "is typing"
    :and-you                               "and you"
@@ -298,6 +301,7 @@
    :wallet-send-token                     "Send {{symbol}}"
    :wallet-request                        "Request"
    :wallet-exchange                       "Exchange"
+   :wallet-asset                          "Asset"
    :wallet-assets                         "Assets"
    :wallet-add-asset                      "Add asset"
    :wallet-total-value                    "Total value"
@@ -313,6 +317,7 @@
    :eth                                   "ETH"
    :currency                              "Currency"
    :usd-currency                          "USD"
+   :amount-placeholder                    "Specify amount"
    :transactions                          "Transactions"
    :transaction-details                   "Transaction details"
    :transaction-failed                    "Transaction failed"
@@ -344,8 +349,12 @@
    :wallet-choose-from-contacts           "Choose From Contacts"
    :wallet-address-from-clipboard         "Use Address From Clipboard"
    :wallet-invalid-address                "Invalid address: \n {{data}}"
-   :wallet-invalid-chain-id               "Network does not match: \n {{data}}"
+   :wallet-invalid-chain-id               "Network does not match: \n {{data}} but current chain is {{chain}}"
    :wallet-browse-photos                  "Browse Photos"
+   :wallet-advanced                       "Advanced"
+   :wallet-transaction-fee                "Transaction Fee"
+   :wallet-transaction-fee-details        "Gas limit is the amount of gas to send with your transaction. Increasing this number will not get your transaction processed faster"
+   :wallet-transaction-total-fee          "Total Fee"
    :validation-amount-invalid-number      "Amount is not a valid number"
    :validation-amount-is-too-precise      "Amount is too precise. The smallest unit you can send is 1 Wei (1x10^-18 ETH)"
 

@@ -15,7 +15,6 @@
             [status-im.chat.new-chat.view :refer [new-chat]]
             [status-im.chat.new-public-chat.view :refer [new-public-chat]]
 
-            [status-im.ui.screens.contacts.contact-list.views :refer [contact-list]]
             [status-im.ui.screens.contacts.contact-list-modal.views :refer [contact-list-modal]]
             [status-im.ui.screens.contacts.new-contact.views :refer [new-contact]]
 
@@ -39,6 +38,8 @@
             [status-im.ui.screens.wallet.choose-recipient.views :refer [choose-recipient]]
             [status-im.ui.screens.wallet.request.views :refer [request-transaction]]
             [status-im.ui.screens.wallet.wallet-list.views :refer [wallet-list-screen]]
+            [status-im.ui.screens.wallet.components.views :as wallet.components]
+            [status-im.ui.screens.wallet.send.views :as wallet.send]
             [status-im.ui.screens.wallet.settings.views :as wallet-settings]
             [status-im.ui.screens.wallet.transactions.views :as wallet-transactions]
             [status-im.ui.screens.wallet.send.transaction-sent.views :refer [transaction-sent transaction-sent-modal]]
@@ -72,7 +73,7 @@
     (when view-id
       (let [current-view (validate-current-view view-id signed-up?)]
         (let [component (case current-view
-                          (:wallet :chat-list :discover :contact-list) main-tabs
+                          (:home :wallet :my-profile) main-tabs
                           :wallet-list wallet-list-screen
                           :wallet-send-transaction send-transaction
                           :wallet-transaction-sent transaction-sent
@@ -81,6 +82,8 @@
                           (:transactions-history :unsigned-transactions) wallet-transactions/transactions
                           :wallet-transaction-details wallet-transactions/transaction-details
                           (:wallet-my-token :wallet-market-value) wallet-assets/my-token-main
+                          :wallet-send-assets wallet.components/send-assets
+                          :wallet-request-assets wallet.components/request-assets
                           :new-chat new-chat
                           :new-group new-group
                           :edit-contact-group edit-contact-group
@@ -91,13 +94,11 @@
                           :edit-chat-group-contact-list edit-chat-group-contact-list
                           :new-public-chat new-public-chat
                           :contact-toggle-list contact-toggle-list
-                          :group-contacts contact-list
                           :reorder-groups reorder-groups
                           :new-contact new-contact
                           :qr-scanner qr-scanner
                           :chat chat
                           :profile profile
-                          :my-profile my-profile
                           :edit-my-profile edit-my-profile
                           :discover-all-recent discover-recent/discover-all-recent
                           :discover-all-hashtags discover-popular/discover-all-hashtags
@@ -131,5 +132,6 @@
                                   :wallet-settings-assets wallet-settings/manage-assets
                                   :wallet-send-transaction-modal send-transaction-modal
                                   :wallet-transaction-sent-modal transaction-sent-modal
+                                  :wallet-transaction-fee wallet.send/transaction-fee
                                   (throw (str "Unknown modal view: " modal-view)))]
                   [component])]])]])))))
