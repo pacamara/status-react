@@ -49,10 +49,10 @@ node ('macos1') {
     // }
 
     // Android
-    stage('Build (Android)') {
+    // stage('Build (Android)') {
       // sh 'cd android && ./gradlew assembleRelease'
-      sh 'cd ~/dev/status-react/android && ./gradlew assembleRelease'
-    }
+// sh 'cd ~/dev/status-react/android && ./gradlew assembleRelease'
+    // }
 
     stage('Deploy (Android)') {
       withCredentials([string(credentialsId: 'diawi-token', variable: 'token')]) {
