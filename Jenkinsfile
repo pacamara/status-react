@@ -34,7 +34,7 @@ node ('macos1') {
       sh 'cp .env.jenkins .env'
       sh 'lein deps'
 
-      installJSDeps()
+      //installJSDeps()
 
       sh 'mvn -f modules/react-native-status/ios/RCTStatus dependency:unpack'
       sh 'cd ios && pod install && cd ..'
