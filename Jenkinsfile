@@ -44,13 +44,14 @@ node ('macos1') {
     //  sh 'lein test-cljs'
     // }
 
-    stage('Build') {
-      sh 'lein prod-build'
-    }
+    // stage('Build') {
+    //  sh 'lein prod-build'
+    // }
 
     // Android
     stage('Build (Android)') {
-      sh 'cd android && ./gradlew assembleRelease'
+      // sh 'cd android && ./gradlew assembleRelease'
+      sh 'cd ~/dev/status-react/android && ./gradlew assembleRelease'
     }
 
     stage('Deploy (Android)') {
