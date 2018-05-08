@@ -86,7 +86,6 @@ node ('macos1') {
             version = "(no version info found)"
         } */
 
-        println("$pr_id=" + $pr_id)  
         sh ('$pr_id: ' + $pr_id)
           
         def commentMsg = "apk uploaded to " + apkUrl + " for branch " + BRANCH_NAME 
