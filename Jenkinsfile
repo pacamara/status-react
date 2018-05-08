@@ -103,7 +103,7 @@ node ('macos1') {
     // }
 
     stage('Deploy (iOS)') {
-      withCredentials([string(credentialsId: 'diawi-token', variable: 'token')]) {
+      withCredentials([string(credentialsId: 'diawi-token', variable: 'token'), string(credentialsId: 'GIT_HUB_TOKEN', variable: 'githubToken')]) {
         def job = sh(returnStdout: true, script: 'curl https://upload.diawi.com/ -F token='+token+' -F file=@status/StatusIm.ipa -F find_by_udid=0 -F wall_of_apps=0 | jq -r ".job"').trim()
         sh 'sleep 10'
         def hash = sh(returnStdout: true, script: "curl -vvv 'https://upload.diawi.com/status?token="+token+"&job="+job+"'|jq -r '.hash'").trim()
