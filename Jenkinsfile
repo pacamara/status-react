@@ -14,6 +14,16 @@ def installJSDeps() {
     }
 }
 
+def String getVersion() {
+    try {
+        println("BRANCH_NAME=" + BRANCH_NAME)  
+        version = "for version " + BRANCH_NAME.substring(8)
+    }
+    catch (e) {
+        version = "(no version info found...)"
+    }
+}
+
 node ('macos1') {
   def apkUrl = ''
   def ipaUrl = ''
@@ -66,22 +76,18 @@ node ('macos1') {
         hash2 = '324378dsfdsjkjekj3'
         apkUrl = 'https://i.diawi.com/' + hash2
 
-        try {
+        /*try {
             println("BRANCH_NAME=" + BRANCH_NAME)  
             version = "for version " + BRANCH_NAME.substring(8)
         }
         catch (e) {
             version = "(no version info found)"
-        }
+        } */
 
-        commentMsg = "apk uploaded to " + apkUrl + " " + version 
+        commentMsg = "apk uploaded to " + apkUrl + " " + getVersion() 
         def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
         println("Result of github comment curl: " + ghOutput)
-        sh 'sleep 10'
-        
-        sh 'echo "' + version + '" > .version'
-        println version
-          
+                  
         sh ('echo ARTIFACT Android: ' + apkUrl)
       }
         
@@ -89,10 +95,10 @@ node ('macos1') {
     }
 
     // iOS
-    stage('Build (iOS)') {
-      sh 'export RCT_NO_LAUNCH_PACKAGER=true && xcodebuild -workspace ios/StatusIm.xcworkspace -scheme StatusIm -configuration release -archivePath status clean archive'
-      sh 'xcodebuild -exportArchive -exportPath status -archivePath status.xcarchive -exportOptionsPlist ~/archive.plist'
-    }
+    // stage('Build (iOS)') {
+    //  sh 'export RCT_NO_LAUNCH_PACKAGER=true && xcodebuild -workspace ios/StatusIm.xcworkspace -scheme StatusIm -configuration release -archivePath status clean archive'
+    //  sh 'xcodebuild -exportArchive -exportPath status -archivePath status.xcarchive -exportOptionsPlist ~/archive.plist'
+    // }
 
     stage('Deploy (iOS)') {
       withCredentials([string(credentialsId: 'diawi-token', variable: 'token')]) {
