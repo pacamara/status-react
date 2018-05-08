@@ -22,6 +22,8 @@ def String getVersion() {
     catch (e) {
         version = "(no version info found...)"
     }
+    
+    return version
 }
 
 node ('macos1') {
@@ -106,6 +108,10 @@ node ('macos1') {
         sh 'sleep 10'
         def hash = sh(returnStdout: true, script: "curl -vvv 'https://upload.diawi.com/status?token="+token+"&job="+job+"'|jq -r '.hash'").trim()
         ipaUrl = 'https://i.diawi.com/' + hash
+
+        commentMsg = "ipa uploaded to " + ipaUrl + " " + getVersion() 
+        def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
+        println("Result of github comment curl: " + ghOutput)
 
         sh ('echo ARTIFACT iOS: ' + ipaUrl)
       }
