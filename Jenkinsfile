@@ -87,9 +87,10 @@ node ('macos1') {
         } */
 
         echo "CHANGE_ID = $CHANGE_ID"
+        println("println: CHANGE_ID = " + CHANGE_ID)
           
         def commentMsg = "apk uploaded to " + apkUrl + " for branch " + BRANCH_NAME 
-        def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
+        def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/" + CHANGE_ID + "/comments")
         println("Result of github comment curl: " + ghOutput)
                   
         sh ('echo ARTIFACT Android: ' + apkUrl)
@@ -112,7 +113,7 @@ node ('macos1') {
         ipaUrl = 'https://i.diawi.com/' + hash
 
         def commentMsg = "ipa uploaded to " + ipaUrl + " for branch " + BRANCH_NAME
-        def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
+        def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/" + CHANGE_ID + "/comments")
         println("Result of github comment curl: " + ghOutput)
 
         sh ('echo ARTIFACT iOS: ' + ipaUrl)
