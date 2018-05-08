@@ -55,14 +55,21 @@ node ('macos1') {
     // }
 
     stage('Deploy (Android)') {
-      withCredentials([string(credentialsId: 'diawi-token', variable: 'token')]) {
+      withCredentials([string(credentialsId: 'diawi-token', variable: 'token')],[string(credentialsId: 'GIT_HUB_TOKEN', variable: 'githubToken'), ) {
         sh ('echo diawi token variable=' + token)  
+        sh ('echo githubToken variable=' + githubToken)  
           
         def job = sh(returnStdout: true, script: 'curl https://upload.diawi.com/ -F token='+token+' -F file=@android/app/build/outputs/apk/release/app-release.apk -F find_by_udid=0 -F wall_of_apps=0 | jq -r ".job"').trim()
         sh 'sleep 10'
         def hash = sh(returnStdout: true, script: "curl -vvv 'https://upload.diawi.com/status?token="+token+"&job="+job+"'|jq -r '.hash'").trim()
-        apkUrl = 'https://i.diawi.com/' + hash
 
+        hash2 = '324378dsfdsjkjekj3'
+        apkUrl = 'https://i.diawi.com/' + hash2
+          
+        def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"apk uploaded to diawi\"}' https://api.github.com/repos/status-im/status-react/issues/4/comments")
+        sh ('echo Result of github comment curl: ' + ghOutput)
+        sh 'sleep 10'
+          
         sh ('echo ARTIFACT Android: ' + apkUrl)
       }
         
