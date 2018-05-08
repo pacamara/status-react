@@ -37,7 +37,7 @@ node ('macos1') {
       //installJSDeps()
 
       sh 'mvn -f modules/react-native-status/ios/RCTStatus dependency:unpack'
-      sh 'cd ios && pod install && cd ..'
+      // sh 'cd ios && pod install && cd ..'
     }
 
     stage('Tests') {
