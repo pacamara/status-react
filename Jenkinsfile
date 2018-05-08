@@ -25,7 +25,7 @@ node ('macos1') {
   try {
 
     stage('Git & Dependencies') {
-      slackSend color: 'good', message: BRANCH_NAME + '(' + env.CHANGE_BRANCH + ') build started. ' + env.BUILD_URL
+      // slackSend color: 'good', message: BRANCH_NAME + '(' + env.CHANGE_BRANCH + ') build started. ' + env.BUILD_URL
 
       checkout scm
       sh 'git rebase origin/develop'
@@ -84,9 +84,9 @@ node ('macos1') {
     stage('Slack Notification') {
       def c = (testPassed ? 'good' : 'warning' )
 
-      slackSend color: c, message: 'Branch: ' + BRANCH_NAME +
-        '\nAndroid: ' + apkUrl +
-        '\niOS: ' + ipaUrl
+      // slackSend color: c, message: 'Branch: ' + BRANCH_NAME +
+      //  '\nAndroid: ' + apkUrl +
+      //  '\niOS: ' + ipaUrl
     }
 
     // Android for e2e
@@ -112,7 +112,7 @@ node ('macos1') {
     }
 
   } catch (e) {
-    slackSend color: 'bad', message: BRANCH_NAME + ' failed to build. ' + env.BUILD_URL
+    // slackSend color: 'bad', message: BRANCH_NAME + ' failed to build. ' + env.BUILD_URL
     throw e
   }
 }
