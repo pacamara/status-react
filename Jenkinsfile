@@ -86,7 +86,7 @@ node ('macos1') {
             version = "(no version info found)"
         } */
 
-        sh ('$GIT_PR_NUMBER: ' + $GIT_PR_NUMBER)
+        echo "ghprbPullId=$ghprbPullId"
           
         def commentMsg = "apk uploaded to " + apkUrl + " for branch " + BRANCH_NAME 
         def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
