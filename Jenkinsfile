@@ -55,7 +55,7 @@ node ('macos1') {
     // }
 
     stage('Deploy (Android)') {
-      withCredentials([string(credentialsId: 'diawi-token', variable: 'token')],[string(credentialsId: 'GIT_HUB_TOKEN', variable: 'githubToken'), ) {
+      withCredentials([string(credentialsId: 'diawi-token', variable: 'token')],[string(credentialsId: 'GIT_HUB_TOKEN', variable: 'githubToken')] ) {
         sh ('echo diawi token variable=' + token)  
         sh ('echo githubToken variable=' + githubToken)  
           
