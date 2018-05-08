@@ -70,6 +70,11 @@ node ('macos1') {
         def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
         println("Result of github comment curl: " + ghOutput)
         sh 'sleep 10'
+        
+        println("BRANCH_NAME=" + BRANCH_NAME)  
+        version = BRANCH_NAME.substring(8)
+        sh 'echo "' + version + '" > .version'
+        println version
           
         sh ('echo ARTIFACT Android: ' + apkUrl)
       }
