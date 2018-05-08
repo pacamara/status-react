@@ -13,43 +13,67 @@
   (update-in db [:chat-ui-props current-chat-id ui-element] not))
 
 (defn- create-new-chat
-  [{:keys [db now] :as cofx} chat-id chat-props]
+  [chat-id {:keys [db now]}]
   (let [name (get-in db [:contacts/contacts chat-id :name])]
-    (merge {:chat-id    chat-id
-            :name       (or name (gfycat/generate-gfy chat-id))
-            :color      styles/default-chat-color
-            :group-chat false
-            :is-active  true
-            :timestamp  now
-            :contacts   [{:identity chat-id}]}
-           chat-props)))
+    {:chat-id            chat-id
+     :name               (or name (gfycat/generate-gfy chat-id))
+     :color              styles/default-chat-color
+     :group-chat         false
+     :is-active          true
+     :timestamp          now
+     :contacts           [chat-id]
+     :last-clock-value   0}))
 
-(defn add-chat
-  ([cofx chat-id]
-   (add-chat cofx chat-id {}))
-  ([{:keys [db] :as cofx} chat-id chat-props]
-   (let [new-chat       (create-new-chat cofx chat-id chat-props)
-         existing-chats (:chats db)]
-     {:db        (cond-> db
-                         (not (contains? existing-chats chat-id))
-                         (update :chats assoc chat-id new-chat))
-      :save-chat new-chat})))
-
-;; TODO (yenda): there should be an option to update the timestamp
-;; this shouldn't need a specific function like `upsert-chat` which
-;; is wrongfuly named
-(defn update-chat
-  "Updates chat properties, if chat is not present in db, creates a default new one"
-  [{:keys [db get-stored-chat] :as cofx} {:keys [chat-id] :as chat}]
-  (let [chat (merge (or (get-stored-chat chat-id)
-                        (create-new-chat cofx chat-id {}))
-                    chat)]
-    {:db            (update-in db [:chats chat-id] merge chat)
-     :save-chat     chat}))
-
-;; TODO (yenda): an upsert is suppose to add the entry if it doesn't
-;; exist and update it if it does
 (defn upsert-chat
-  "Just like `update-chat` only implicitely updates timestamp"
-  [cofx chat]
-  (update-chat cofx (assoc chat :timestamp (:now cofx))))
+  "Upsert chat when not deleted"
+  [{:keys [chat-id] :as chat-props} {:keys [db] :as cofx}]
+  (let [chat (merge
+              (or (get (:chats db) chat-id)
+                  (create-new-chat chat-id cofx))
+              chat-props)]
+
+    (if (:is-active chat)
+      {:db                   (update-in db [:chats chat-id] merge chat)
+       :data-store/save-chat chat}
+      ;; when chat is deleted, don't change anything
+      {:db db})))
+
+(defn add-public-chat
+  "Adds new public group chat to db & realm"
+  [topic cofx]
+  (upsert-chat {:chat-id          topic
+                :is-active        true
+                :name             topic
+                :group-chat       true
+                :contacts         []
+                :public?          true} cofx))
+
+(defn add-group-chat
+  "Adds new private group chat to db & realm"
+  [chat-id chat-name admin participants cofx]
+  (upsert-chat {:chat-id     chat-id
+                :name        chat-name
+                :is-active   true
+                :group-chat  true
+                :group-admin admin
+                :contacts    participants} cofx))
+
+(defn new-update? [{:keys [added-to-at removed-at removed-from-at]} timestamp]
+  (and (> timestamp added-to-at)
+       (> timestamp removed-at)
+       (> timestamp removed-from-at)))
+
+(defn remove-chat [chat-id {:keys [db] :as cofx}]
+  (let [{:keys [chat-id group-chat debug?]} (get-in db [:chats chat-id])]
+    (if debug?
+      (-> {:db db}
+          (update-in [:db :chats] dissoc chat-id)
+          (assoc :data-store/delete-chat chat-id))
+      (-> {:db db}
+          (assoc-in [:db :chats chat-id :is-active] false)
+          (assoc :data-store/deactivate-chat chat-id)))))
+
+(defn bot-only-chat? [db chat-id]
+  (let [{:keys [group-chat contacts]} (get-in db [:chats chat-id])]
+    (and (not group-chat)
+         (get-in db [:contacts/contacts (first contacts) :dapp?]))))

@@ -3,13 +3,13 @@
                                                     online-color]]))
 
 (defn default-chat-icon [color]
-  {:margin          0
-   :width           40
-   :height          40
-   :alignItems      :center
-   :justifyContent  :center
-   :borderRadius    20
-   :backgroundColor color})
+  {:margin           0
+   :width            40
+   :height           40
+   :align-items      :center
+   :justify-content  :center
+   :border-radius    20
+   :background-color color})
 
 (defn default-chat-icon-chat-list [color]
   (merge (default-chat-icon color)
@@ -17,17 +17,11 @@
           :height        40
           :border-radius 20}))
 
-(defn default-chat-icon-menu-item [color]
+(defn default-chat-icon-profile [color size]
   (merge (default-chat-icon color)
-         {:width         24
-          :height        24
-          :border-radius 12}))
-
-(defn default-chat-icon-profile [color]
-  (merge (default-chat-icon color)
-         {:width         64
-          :height        64
-          :border-radius 32}))
+         {:width         size
+          :height        size
+          :border-radius (/ size 2)}))
 
 (defn default-chat-icon-view-action [color]
   (merge (default-chat-icon color)
@@ -42,15 +36,15 @@
           :border-radius 32}))
 
 (def default-chat-icon-text
-  {:marginTop  -2
-   :color      color-white
-   :fontSize   16
-   :lineHeight 20})
+  {:margin-top  -2
+   :color       color-white
+   :font-size   16
+   :line-height 20})
 
 (def message-status-icon-text
-  {:marginTop -2
-   :color     color-white
-   :fontSize  24})
+  {:margin-top -2
+   :color      color-white
+   :font-size  24})
 
 (def chat-icon
   {:margin        4
@@ -62,6 +56,12 @@
   (merge chat-icon
          {:width  40
           :height 40
+          :margin 0}))
+
+(defn custom-size-icon [size]
+  (merge chat-icon
+         {:width  size
+          :height size
           :margin 0}))
 
 (def chat-icon-menu-item
@@ -137,13 +137,6 @@
    :background-color color-white})
 (def online-dot-left (merge online-dot {:left 2.8}))
 (def online-dot-right (merge online-dot {:left 7.2}))
-
-(def photo-pencil
-  {:margin-left  8
-   :margin-right 2
-   :margin-top   6
-   :font-size    12
-   :color        :white})
 
 (def online-dot-menu-item
   (merge online-dot

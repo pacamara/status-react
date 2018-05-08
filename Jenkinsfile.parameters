@@ -1,6 +1,19 @@
 env.LANG="en_US.UTF-8"
 env.LANGUAGE="en_US.UTF-8"
 env.LC_ALL="en_US.UTF-8"
+
+def installJSDeps() {
+    def attempt = 1
+    def maxAttempts = 10
+    def installed = false
+    while (!installed && attempt <= maxAttempts) {
+        println "#${attempt} attempt to install npm deps"
+        sh 'npm install'
+        installed = fileExists('node_modules/web3/index.js')
+        attemp = attempt + 1
+    }
+}
+
 node ('macos1') {
   def apkUrl = ''
   def ipaUrl = ''
@@ -13,39 +26,35 @@ node ('macos1') {
 
     stage('Git & Dependencies') {
       slackSend color: 'good', message: REPO + ":" + BRANCH_NAME + ' build started. ' + env.BUILD_URL
-      git([url: 'https://github.com/' + REPO + '/status-react.git', branch: BRANCH_NAME])
-      // Checkout master because used for iOS Plist version information
-      sh 'git checkout -- .'
-      sh 'git checkout develop'
-      sh 'git checkout ' + BRANCH_NAME
+
+      checkout scm
+
       sh 'rm -rf node_modules'
+
+      sh 'test ${JENKINS_REBASE_DEVELOP} -eq 1 && git rebase origin/develop || echo "Not rebasing on develop."'
 
       // Assume all parameters are set in Jenkins 'Parameterized build'
       // TODO(oskarth): Consider read/write from .env to avoid having to specify in Jenkins again
       // sh 'cp .env.jenkins .env'
-      sh 'echo TESTFAIRY_ENABLED='         + TESTFAIRY_ENABLED         + '>>' + '.env'
-      sh 'echo NOTIFICATIONS_WIP_ENABLED=' + NOTIFICATIONS_WIP_ENABLED + '>>' + '.env'
-      sh 'echo DEBUG_LOGS_ENABLED='        + DEBUG_LOGS_ENABLED        + '>>' + '.env'
-      sh 'echo STUB_STATUS_GO='            + STUB_STATUS_GO            + '>>' + '.env'
-      sh 'echo ETHEREUM_DEV_CLUSTER='      + ETHEREUM_DEV_CLUSTER      + '>>' + '.env'
-      sh 'echo MAINNET_NETWORKS_ENABLED='  + MAINNET_NETWORKS_ENABLED  + '>>' + '.env'
-      sh 'echo ERC20_ENABLED='             + ERC20_ENABLED             + '>>' + '.env'
-      sh 'echo LOG_LEVEL='                 + LOG_LEVEL                 + '>>' + '.env'
-      sh 'echo JSC_ENABLED='               + JSC_ENABLED               + '>>' + '.env'
-      sh 'echo OFFLINE_INBOX_ENABLED='     + OFFLINE_INBOX_ENABLED     + '>>' + '.env'
+      sh 'echo TESTFAIRY_ENABLED='           + TESTFAIRY_ENABLED            + '>>' + '.env'
+      sh 'echo STUB_STATUS_GO='              + STUB_STATUS_GO               + '>>' + '.env'
+      sh 'echo ETHEREUM_DEV_CLUSTER='        + ETHEREUM_DEV_CLUSTER         + '>>' + '.env'
+      sh 'echo MAINNET_NETWORKS_ENABLED='    + MAINNET_NETWORKS_ENABLED     + '>>' + '.env'
+      sh 'echo LOG_LEVEL='                   + LOG_LEVEL                    + '>>' + '.env'
+      sh 'echo LOG_LEVEL_STATUS_GO='         + LOG_LEVEL_STATUS_GO          + '>>' + '.env'
+      sh 'echo JSC_ENABLED='                 + JSC_ENABLED                  + '>>' + '.env'
+      sh 'echo OFFLINE_INBOX_ENABLED='       + OFFLINE_INBOX_ENABLED        + '>>' + '.env'
+      sh 'echo MANY_WHISPER_TOPICS_ENABLED=' + MANY_WHISPER_TOPICS_ENABLED  + '>>' + '.env'
+      sh 'echo POW_TARGET='                  + POW_TARGET                   + '>>' + '.env'
+      sh 'echo POW_TIME='                    + POW_TIME                     + '>>' + '.env'
 
       sh 'echo "**********************************************************************"'
       sh 'echo PARAMETERIZED BUILD - USING CUSTOM ENVIRONMENT'
       sh 'cat .env'
       sh 'echo "**********************************************************************"'
 
-      sh 'lein deps && npm install'
-      // Uncomment with RN merge
-      sh '[ -f node_modules/react-native/packager/src/JSTransformer/index.js ] && sed -i "" "s/301000/1201000/g" node_modules/react-native/packager/src/JSTransformer/index.js || echo "New packager"'
-      // sh 'sed -i "" "s/301000/1201000/g" node_modules/react-native/packager/src/JSTransformer/index.js'
-
-      // Fix silly RN upgrade weird env issue
-      sh 'cp findSymlinkedModules.js.patch node_modules/react-native/local-cli/util/findSymlinkedModules.js'
+      sh 'lein deps'
+      installJSDeps()
 
       sh 'mvn -f modules/react-native-status/ios/RCTStatus dependency:unpack'
       sh 'cd ios && pod install && cd ..'
@@ -65,7 +74,7 @@ node ('macos1') {
         }
         stage('Deploy (Android)') {
             withCredentials([string(credentialsId: 'diawi-token', variable: 'token')]) {
-                def job = sh(returnStdout: true, script: 'curl https://upload.diawi.com/ -F token='+token+' -F file=@android/app/build/outputs/apk/app-release.apk -F find_by_udid=0 -F wall_of_apps=0 | jq -r ".job"').trim()
+                def job = sh(returnStdout: true, script: 'curl https://upload.diawi.com/ -F token='+token+' -F file=@android/app/build/outputs/apk/release/app-release.apk -F find_by_udid=0 -F wall_of_apps=0 | jq -r ".job"').trim()
                 sh 'sleep 10'
                 def hash = sh(returnStdout: true, script: "curl -vvv 'https://upload.diawi.com/status?token="+token+"&job="+job+"'|jq -r '.hash'").trim()
                 apkUrl = 'https://i.diawi.com/' + hash

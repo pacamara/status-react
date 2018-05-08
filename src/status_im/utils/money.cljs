@@ -30,7 +30,7 @@
 (defn bignumber [n]
   (when n
     (try
-      (dependencies/Web3.prototype.toBigNumber (str n))
+      (dependencies/Web3.prototype.toBigNumber (normalize (str n)))
       (catch :default err nil))))
 
 (defn valid? [bn]
@@ -68,6 +68,10 @@
   (when-let [bn (bignumber n)]
     (.dividedBy bn (eth-units unit))))
 
+(defn ->wei [unit n]
+  (when-let [bn (bignumber n)]
+    (.times bn (eth-units unit))))
+
 (defn to-fixed [bn]
   (when bn
     (.toFixed bn)))
@@ -89,9 +93,9 @@
 (defn fee-value [gas gas-price]
   (.times (bignumber gas) (bignumber gas-price)))
 
-(defn eth->usd [eth usd-price]
+(defn eth->fiat [eth fiat-price]
   (when-let [bn (bignumber eth)]
-    (.times bn (bignumber usd-price))))
+    (.times bn (bignumber fiat-price))))
 
 (defn percent-change [from to]
   (let [bnf (bignumber from)
@@ -106,5 +110,5 @@
     (.round bn decimals)))
 
 (defn sufficient-funds? [amount balance]
-  (when balance
+  (when (and amount balance)
     (.greaterThanOrEqualTo balance amount)))

@@ -9,6 +9,7 @@
     [status-im.translations.da :as da]
     [status-im.translations.de :as de]
     [status-im.translations.de-ch :as de-ch]
+    [status-im.translations.el :as el]
     [status-im.translations.en :as en]
     [status-im.translations.es :as es]
     [status-im.translations.es-ar :as es-ar]
@@ -71,6 +72,7 @@
                              :da          da/translations
                              :de          de/translations
                              :de-ch       de-ch/translations
+                             :el          el/translations
                              :en          en/translations
                              :es          es/translations
                              :es-ar       es-ar/translations
@@ -163,13 +165,13 @@
     :phone-national :amount :open :close-app-title :members-active :chat-name
     :phew-here-is-your-passphrase :public-group-topic :debug-enabled
     :chat-settings :offline :update-status :invited :chat-send-eth :address
-    :new-public-group-chat :datetime-hour :dropped-pin :wallet-settings
+    :new-public-group-chat :datetime-hour :wallet-settings
     :datetime-ago-format :close-app-button :block :camera-access-error
     :wallet-invalid-address :address-explication :remove
     :transactions-delete-content :transactions-unsigned-empty
     :transaction-moved-text :add-members :sign-later-title :sharing-cancel
     :yes :dapps :popular-tags :network-settings :twelve-words-in-correct-order
-    :transaction-moved-title :phone-number :photos-access-error :hash
+    :transaction-moved-title :photos-access-error :hash
     :removed-from-chat :done :remove-from-contacts :delete-chat :new-group-chat
     :edit-chats :wallet :wallet-exchange :wallet-request :sign-in
     :datetime-yesterday :create-new-account :sign-in-to-status :dapp-profile
@@ -178,34 +180,33 @@
     :not-applicable :move-to-internal-failure-message :active-online
     :password :status-seen-by-everyone :edit-group :not-specified
     :delete-group :send-request :paste-json :browsing-title
-    :wallet-add-asset :reorder-groups :transactions-history-empty
-    :sharing-copy-to-clipboard-coordinates :discover :wallet-error
+    :wallet-add-asset :reorder-groups :transactions-history-empty :discover
     :browsing-cancel :faucet-success :intro-status :name :gas-price
-    :phone-number-required :view-transaction-details
+    :view-transaction-details :wallet-error
     :validation-amount-is-too-precise :copy-transaction-hash :unknown-address
     :received-invitation :show-qr :edit-network-config :connect
     :choose-from-contacts :edit :wallet-address-from-clipboard
     :account-generation-message :remove-network :no-messages :passphrase
-    :recipient :members-title :new-group :phone-e164 :suggestions-requests
+    :recipient :members-title :new-group :suggestions-requests
     :connected :rpc-url :settings :remove-from-group :specify-rpc-url
-    :contacts-syncronized :transactions-sign-all :gas-limit :wallet-browse-photos
+    :transactions-sign-all :gas-limit :wallet-browse-photos
     :add-new-contact :no-statuses-discovered-body :add-json-file :delete
     :search-contacts :chats :transaction-sent :transaction :public-group-status
     :leave-chat :transactions-delete :mainnet-text :image-source-make-photo
     :chat :start-conversation :topic-format :add-new-network :save
-    :enter-valid-public-key :faucet-error :phone-significant :all
+    :enter-valid-public-key :faucet-error :all
     :confirmations-helper-text :search-for :sharing-copy-to-clipboard
-    :your-wallets :phone-international :sync-in-progress :enter-password
+    :your-wallets :sync-in-progress :enter-password
     :enter-address :switch-users :send-transaction :confirmations
-    :recover-access :incorrect-code :image-source-gallery :sync-synced
+    :recover-access :image-source-gallery :sync-synced
     :currency :status-pending :delete-contact :connecting-requires-login
     :no-hashtags-discovered-title :datetime-day :request-transaction
-    :wallet-send :mute-notifications :invalid-phone :scan-qr :contact-s
+    :wallet-send :mute-notifications :scan-qr :contact-s
     :unsigned-transaction-expired :status-sending :gas-used
-    :transactions-filter-type :next :recent :confirmation-code
-    :open-on-etherscan :share :status :from :your-current-location
+    :transactions-filter-type :next :recent
+    :open-on-etherscan :share :status :from
     :wrong-password :search-chats :transactions-sign-later :in-contacts
-    :transactions-sign :sharing-share :type-a-message :type-a-command
+    :transactions-sign :sharing-share :type-a-message
     :usd-currency :existing-networks :node-unavailable :url :shake-your-phone
     :add-network :unknown-status-go-error :contacts-group-new-chat :and-you
     :wallets :clear-history :wallet-choose-from-contacts
@@ -214,15 +215,13 @@
     :delete-contact-confirmation :datetime-today :add-a-status
     :web-view-error :notifications-title :error :transactions-sign-transaction
     :edit-contacts :more :cancel :no-statuses-found :can-not-add-yourself
-    :transaction-description :add-to-contacts :available :open-map
+    :transaction-description :add-to-contacts :available
     :paste-json-as-text :You :main-wallet :process-json :testnet-text
     :transactions :transactions-unsigned :members :intro-message1
     :public-chat-user-count :eth :transactions-history :not-implemented
-    :new-contact :datetime-second :search-results :status-failed :is-typing
-    :sharing-copy-to-clipboard-address :recover :wallet-total-value
-    :places-nearby :suggestions-commands :nonce :new-network
-    :contact-already-added :datetime-minute :location
-    :browsing-open-in-web-browser :delete-group-prompt
+    :new-contact :datetime-second :status-failed :is-typing :recover
+    :suggestions-commands :nonce :new-network :contact-already-added :datetime-minute
+    :browsing-open-in-web-browser :delete-group-prompt :wallet-total-value
     :wallet-insufficient-funds :edit-profile :active-unknown :testfairy-message
     :search-tags :transaction-failed :public-key :error-processing-json
     :status-seen :transactions-filter-tokens :status-delivered :profile
@@ -279,12 +278,15 @@
                                                 :zh-hant-mo
                                                 :zh-hant-cn
                                                 :sr-RS_#Cyrl
+                                                :el
                                                 :en
                                                 :de
                                                 :lt
                                                 :sr-RS_#Latn
                                                 :sr
-                                                :sv}))
+                                                :sv
+                                                :ja
+                                                :uk}))
 
 (spec/def ::supported-locale supported-locales)
 (spec/def ::supported-locales (spec/coll-of ::supported-locale :kind set? :into #{}))

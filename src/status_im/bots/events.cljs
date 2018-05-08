@@ -1,6 +1,6 @@
 (ns status-im.bots.events
   (:require [re-frame.core :as re-frame]
-            [status-im.utils.utils :as utils]
+            [status-im.utils.core :as utils]
             [status-im.utils.handlers :as handlers]
             [status-im.chat.models.input :as input-model]
             [taoensso.timbre :as log]))
@@ -22,11 +22,11 @@
         :function :subscription
         :parameters {:name          sub-name
                      :subscriptions (subscription-values sub-params (get bot-db bot))}
-        :callback-events-creator (fn [jail-response]
-                                   [[::calculated-subscription
-                                     {:bot    bot
-                                      :path   [sub-name]
-                                      :result jail-response}]])})}))
+        :callback-event-creator (fn [jail-response]
+                                  [::calculated-subscription
+                                   {:bot    bot
+                                    :path   [sub-name]
+                                    :result jail-response}])})}))
 
 (defn set-in-bot-db
   "Associates value at specified path in bot-db and checks if there are any subscriptions

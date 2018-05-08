@@ -1,37 +1,39 @@
-from selenium.common.exceptions import NoSuchElementException
-
-from apis.ropsten_api import get_transactions, is_transaction_successful, get_balance
-from views.base_element import BaseElement, BaseButton, BaseEditBox, BaseText
-import logging
 import time
-import pytest
-import requests
+import base64
+import zbarlight
+from tests import info
+from eth_keys import datatypes
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from PIL import Image
+from datetime import datetime
+from io import BytesIO
+from views.base_element import BaseButton, BaseElement, BaseEditBox, BaseText
 
 
 class BackButton(BaseButton):
     def __init__(self, driver):
         super(BackButton, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector("//*[@content-desc='toolbar-back-button']")
+        self.locator = self.Locator.accessibility_id('back-button')
 
-    def click(self):
-        self.wait_for_element(30)
-        self.find_element().click()
-        logging.info('Tap on %s' % self.name)
+    def click(self, times_to_click: int = 1):
+        for _ in range(times_to_click):
+            self.find_element().click()
+            info('Tap on %s' % self.name)
         return self.navigate()
 
 
 class AllowButton(BaseButton):
     def __init__(self, driver):
         super(AllowButton, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector("//*[@text='Allow']")
+        self.locator = self.Locator.xpath_selector("//*[@text='Allow' or @text='ALLOW']")
 
     def click(self):
         try:
             for _ in range(3):
                 self.find_element().click()
+                info('Tap on %s' % self.name)
         except NoSuchElementException:
             pass
-        logging.info('Tap on %s' % self.name)
 
 
 class DenyButton(BaseButton):
@@ -40,40 +42,16 @@ class DenyButton(BaseButton):
         self.locator = self.Locator.xpath_selector("//*[@text='Deny']")
 
 
-class ContactsButton(BaseButton):
+class DeleteButton(BaseButton):
     def __init__(self, driver):
-        super(ContactsButton, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector("//*[@text='Contacts']")
-
-    def navigate(self):
-        from views.contacts import ContactsViewObject
-        return ContactsViewObject(self.driver)
-
-
-class WalletButton(BaseButton):
-    def __init__(self, driver):
-        super(WalletButton, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector("//*[@text='Wallet']")
-
-    def navigate(self):
-        from views.wallet import WalletViewObject
-        return WalletViewObject(self.driver)
-
-
-class DiscoverButton(BaseButton):
-    def __init__(self, driver):
-        super(DiscoverButton, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector("//*[@text='Discover']")
-
-    def navigate(self):
-        from views.discover import DiscoverView
-        return DiscoverView(self.driver)
+        super(DeleteButton, self).__init__(driver)
+        self.locator = self.Locator.xpath_selector("//*[@text='DELETE']")
 
 
 class YesButton(BaseButton):
     def __init__(self, driver):
         super(YesButton, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector("//*[@text='Yes']")
+        self.locator = self.Locator.xpath_selector("//*[@text='YES']")
 
 
 class NoButton(BaseButton):
@@ -82,27 +60,51 @@ class NoButton(BaseButton):
         self.locator = self.Locator.xpath_selector("//*[@text='No']")
 
 
-class OkButtonAPK(BaseButton):
+class OkButton(BaseButton):
     def __init__(self, driver):
-        super(OkButtonAPK, self).__init__(driver)
+        super(OkButton, self).__init__(driver)
         self.locator = self.Locator.xpath_selector("//*[@text='OK']")
 
 
-class ContinueButtonAPK(BaseButton):
+class ContinueButton(BaseButton):
     def __init__(self, driver):
-        super(ContinueButtonAPK, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector("//*[@text='Continue']")
+        super(ContinueButton, self).__init__(driver)
+        self.locator = self.Locator.xpath_selector("//*[@text='CONTINUE']")
 
 
-def verify_transaction_in_ropsten(address: str, transaction_hash: str):
-    transactions = get_transactions(address=address)
-    for transaction in transactions:
-        if transaction['hash'] == transaction_hash:
-            logging.info('Transaction is found in Ropsten network')
-            if not is_transaction_successful(transaction_hash=transaction_hash):
-                pytest.fail('Transaction is not successful')
-            return
-    pytest.fail('Transaction was not found via Ropsten API')
+class HomeButton(BaseButton):
+    def __init__(self, driver):
+        super(HomeButton, self).__init__(driver)
+        self.locator = self.Locator.accessibility_id('home-tab-button')
+
+    def navigate(self):
+        from views.home_view import HomeView
+        return HomeView(self.driver)
+
+
+class WalletButton(BaseButton):
+    def __init__(self, driver):
+        super(WalletButton, self).__init__(driver)
+        self.locator = self.Locator.accessibility_id('wallet-tab-button')
+
+    def click(self):
+        from views.wallet_view import TransactionsButton
+        self.click_until_presence_of_element(desired_element=TransactionsButton(self.driver), attempts=3)
+        return self.navigate()
+
+    def navigate(self):
+        from views.wallet_view import WalletView
+        return WalletView(self.driver)
+
+
+class ProfileButton(BaseButton):
+    def __init__(self, driver):
+        super(ProfileButton, self).__init__(driver)
+        self.locator = self.Locator.accessibility_id('profile-tab-button')
+
+    def navigate(self):
+        from views.profile_view import ProfileView
+        return ProfileView(self.driver)
 
 
 class SaveButton(BaseButton):
@@ -112,12 +114,18 @@ class SaveButton(BaseButton):
             "//android.widget.TextView[@text='SAVE']")
 
 
-class ChatRequestInput(BaseEditBox):
-
+class NextButton(BaseButton):
     def __init__(self, driver):
-        super(ChatRequestInput, self).__init__(driver)
-        self.locator = \
-            self.Locator.xpath_selector("//android.widget.EditText[@content-desc!='chat-message-input']")
+        super(NextButton, self).__init__(driver)
+        self.locator = self.Locator.xpath_selector(
+            "//android.widget.TextView[@text='NEXT']")
+
+
+class DoneButton(BaseButton):
+    def __init__(self, driver):
+        super(DoneButton, self).__init__(driver)
+        self.locator = self.Locator.xpath_selector(
+            "//android.widget.TextView[@text='DONE']")
 
 
 class AppsButton(BaseButton):
@@ -133,116 +141,173 @@ class StatusAppIcon(BaseButton):
             "//*[@text='Status']")
 
 
-class ChatsButton(BaseButton):
+class SendMessageButton(BaseButton):
     def __init__(self, driver):
-        super(ChatsButton, self).__init__(driver)
-        self.locator = self.Locator.xpath_selector(
-            "//*[@text='Chats']")
+        super(SendMessageButton, self).__init__(driver)
+        self.locator = self.Locator.accessibility_id("send-message-button")
+
+    def click(self):
+        self.find_element().click()
+        info('Tap on %s' % self.name)
 
 
-class BaseViewObject(object):
+class BaseView(object):
     def __init__(self, driver):
         self.driver = driver
+
+        self.send_message_button = SendMessageButton(self.driver)
+        self.home_button = HomeButton(self.driver)
+        self.wallet_button = WalletButton(self.driver)
+        self.profile_button = ProfileButton(self.driver)
 
         self.yes_button = YesButton(self.driver)
         self.no_button = NoButton(self.driver)
         self.back_button = BackButton(self.driver)
         self.allow_button = AllowButton(self.driver)
         self.deny_button = DenyButton(self.driver)
-        self.continue_button_apk = ContinueButtonAPK(self.driver)
-        self.ok_button_apk = OkButtonAPK(self.driver)
+        self.continue_button = ContinueButton(self.driver)
+        self.ok_button = OkButton(self.driver)
+        self.next_button = NextButton(self.driver)
+        self.save_button = SaveButton(self.driver)
+        self.done_button = DoneButton(self.driver)
+        self.delete_button = DeleteButton(self.driver)
+
         self.apps_button = AppsButton(self.driver)
         self.status_app_icon = StatusAppIcon(self.driver)
 
-        self.contacts_button = ContactsButton(self.driver)
-        self.wallet_button = WalletButton(self.driver)
-        self.discover_button = DiscoverButton(self.driver)
-        self.chats_button = ChatsButton(self.driver)
+        self.element_types = {
+            'base': BaseElement,
+            'button': BaseButton,
+            'edit_box': BaseEditBox,
+            'text': BaseText
+        }
 
-        self.save_button = SaveButton(self.driver)
-
-        self.chat_request_input = ChatRequestInput(self.driver)
+    def accept_agreements(self):
+        for button in self.ok_button, self.continue_button:
+            try:
+                button.wait_for_element(15)
+                button.click()
+            except (NoSuchElementException, TimeoutException):
+                pass
 
     @property
     def logcat(self):
         return self.driver.get_log("logcat")
 
     def confirm(self):
-        logging.info("Tap 'Confirm' on native keyboard")
-        self.driver.keyevent(66)
+        info("Tap 'Confirm' on native keyboard")
+        self.driver.press_keycode(66)
 
     def send_as_keyevent(self, string):
         keys = {'0': 7, '1': 8, '2': 9, '3': 10, '4': 11, '5': 12, '6': 13, '7': 14, '8': 15, '9': 16,
 
                 ',': 55, '-': 69, '+': 81, '.': 56, '/': 76, '\\': 73, ';': 74, ' ': 62,
-                '[': 71, ']': 72, '=': 70,
+                '[': 71, ']': 72, '=': 70, '\n': 66, '_': [69, 5],
 
                 'a': 29, 'b': 30, 'c': 31, 'd': 32, 'e': 33, 'f': 34, 'g': 35, 'h': 36, 'i': 37, 'j': 38,
                 'k': 39, 'l': 40, 'm': 41, 'n': 42, 'o': 43, 'p': 44, 'q': 45, 'r': 46, 's': 47, 't': 48,
                 'u': 49, 'v': 50, 'w': 51, 'x': 52, 'y': 53, 'z': 54}
+        time.sleep(3)
         for i in string:
-            logging.info("Tap '%s' on native keyboard" % i)
-            time.sleep(1)
-            self.driver.keyevent(keys[i])
+            info("Tap '%s' on native keyboard" % i)
+            if type(keys[i]) is list:
+                keycode, metastate = keys[i][0], keys[i][1]
+            else:
+                keycode, metastate = keys[i], None
+            self.driver.press_keycode(keycode=keycode, metastate=metastate)
 
     def find_full_text(self, text, wait_time=60):
-        logging.info("Looking for full text: '%s'" % text)
+        info("Looking for full text: '%s'" % text)
         element = BaseElement(self.driver)
         element.locator = element.Locator.xpath_selector('//*[@text="' + text + '"]')
         return element.wait_for_element(wait_time)
 
     def find_text_part(self, text, wait_time=60):
-        logging.info("Looking for a text part: '%s'" % text)
+        info("Looking for a text part: '%s'" % text)
         element = BaseElement(self.driver)
         element.locator = element.Locator.xpath_selector('//*[contains(@text, "' + text + '")]')
         return element.wait_for_element(wait_time)
 
-    def element_by_text(self, text, element_type='base'):
-
-        element_types = {
-            'base': BaseElement,
-            'button': BaseButton,
-            'edit_box': BaseEditBox,
-            'text': BaseText
-        }
-
-        element = element_types[element_type](self.driver)
+    def element_by_text(self, text, element_type='button'):
+        info("Looking for an element by text: '%s'" % text)
+        element = self.element_types[element_type](self.driver)
         element.locator = element.Locator.xpath_selector('//*[@text="' + text + '"]')
         return element
 
     def element_by_text_part(self, text, element_type='base'):
-
-        element_types = {
-            'base': BaseElement,
-            'button': BaseButton,
-            'edit_box': BaseEditBox,
-            'text': BaseText
-        }
-
-        element = element_types[element_type](self.driver)
+        info("Looking for an element by text part: '%s'" % text)
+        element = self.element_types[element_type](self.driver)
         element.locator = element.Locator.xpath_selector('//*[contains(@text, "' + text + '")]')
         return element
 
-    def get_chats(self):
-        from views.chats import ChatsViewObject
-        return ChatsViewObject(self.driver)
+    def element_starts_with_text(self, text, element_type='base'):
+        info("Looking for full text: '%s'" % text)
+        element = self.element_types[element_type](self.driver)
+        element.locator = element.Locator.xpath_selector("//*[starts-with(@text,'%s')]" % text)
+        return element
 
-    def get_login(self):
-        from views.login import LoginView
-        return LoginView(self.driver)
+    def wait_for_element_starts_with_text(self, text, wait_time=60):
+        info("Looking for full text: '%s'" % text)
+        element = BaseElement(self.driver)
+        element.locator = element.Locator.xpath_selector("//*[starts-with(@text,'%s')]" % text)
+        return element.wait_for_element(wait_time)
 
-    def get_donate(self, address, wait_time=300):
-        initial_balance = get_balance(address)
+    def get_home_view(self):
+        from views.home_view import HomeView
+        return HomeView(self.driver)
+
+    def get_chat_view(self):
+        from views.chat_view import ChatView
+        return ChatView(self.driver)
+
+    def get_sign_in_view(self):
+        from views.sign_in_view import SignInView
+        return SignInView(self.driver)
+
+    def get_send_transaction_view(self):
+        from views.send_transaction_view import SendTransactionView
+        return SendTransactionView(self.driver)
+
+    def get_base_web_view(self):
+        from views.web_views.base_web_view import BaseWebView
+        return BaseWebView(self.driver)
+
+    def get_profile_view(self):
+        from views.profile_view import ProfileView
+        return ProfileView(self.driver)
+
+    def get_unique_amount(self):
+        return '0.0%s' % datetime.now().strftime('%-m%-d%-H%-M%-S').strip('0')
+
+    def get_text_from_qr(self):
+        image = Image.open(BytesIO(base64.b64decode(self.driver.get_screenshot_as_base64())))
+        image.load()
+        try:
+            return str(zbarlight.scan_codes('qrcode', image)[0])[2:][:132]
+        except IndexError:
+            raise BaseException('No data in QR code')
+
+    def public_key_to_address(self, public_key):
+        raw_public_key = bytearray.fromhex(public_key.replace('0x04', ''))
+        return datatypes.PublicKey(raw_public_key).to_address()[2:]
+
+    def get_back_to_home_view(self):
         counter = 0
-        if initial_balance < 1000000000000000000:
-            response = requests.request('GET', 'http://46.101.129.137:3001/donate/0x%s' % address).json()
-            while True:
-                if counter == wait_time:
-                    pytest.fail("Donation was not received during %s seconds!" % wait_time)
-                elif get_balance(address) == initial_balance:
-                    counter += 10
-                    time.sleep(10)
-                    logging.info('Waiting %s seconds for donation' % counter)
-                else:
-                    logging.info('Got %s for %s' % (response["amount"], address))
-                    break
+        while not self.home_button.is_element_displayed(2):
+            try:
+                if counter >= 5:
+                    return
+                self.back_button.click()
+            except (NoSuchElementException, TimeoutException):
+                counter += 1
+
+    def relogin(self):
+        self.get_back_to_home_view()
+        profile_view = self.profile_button.click()
+        profile_view.logout_button.click()
+        profile_view.confirm_logout_button.click()
+        sign_in_view = self.get_sign_in_view()
+        sign_in_view.click_account_by_position(0)
+        sign_in_view.password_input.send_keys('qwerty1234')
+        sign_in_view.sign_in_button.click()
+        sign_in_view.home_button.wait_for_visibility_of_element()

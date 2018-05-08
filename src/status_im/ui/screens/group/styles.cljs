@@ -12,17 +12,9 @@
    :flex-direction   :column
    :background-color common/color-white})
 
-(def reorder-groups-container
-  {:flex             1
-   :flex-direction   :column
-   :background-color common/color-light-gray})
-
 (defstyle reorder-list-container
   {:flex    1
    :android {:padding-top 16}})
-
-(def group-name-container
-  {:margin-top 10})
 
 (def add-button-container
   {:margin-left 16})
@@ -60,7 +52,6 @@
    :justify-content  :center
    :ios              {:background-color "#628fe333"
                       :border-radius    50}})
-
 (def add-icon
   {:align-items :center
    :width       24
@@ -98,6 +89,9 @@
    :align-items     :center
    :ios             {:height 63}
    :android         {:height 56}})
+
+(def contact
+  {:padding-left 0})
 
 (defstyle settings-group-container
   {:ios     {:margin-top 25}
@@ -163,20 +157,10 @@
    :ios              {:margin-left 16
                       :opacity     0.5}})
 
-(def toolbar-title-with-count-text
-  {:color          common/text1-color
-   :letter-spacing -0.2
-   :font-size      17})
-
-(def toolbar-title-with-count-text-count
-  (merge toolbar-title-with-count-text
-         {:color common/color-light-blue}))
-
-(def toolbar-title-with-count
-  {:flex-direction :row})
-
-(def toolbar-title-with-count-container
-  {:padding-left 6})
+(defstyle toolbar-container
+  {:flex    1
+   :android {:padding-left 18}
+   :ios     {:align-items :center}})
 
 (def separator
   {:background-color common/color-gray5
@@ -186,7 +170,3 @@
 (def list-view-container
   {:flex       1
    :margin-top 10})
-
-
-
-

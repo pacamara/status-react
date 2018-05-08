@@ -1,53 +1,58 @@
 (ns status-im.ui.components.contact.contact
-  (:require-macros [status-im.utils.views :refer [defview]])
-  (:require [status-im.ui.components.react :refer [view touchable-highlight text]]
-            [status-im.ui.components.icons.vector-icons :as vi]
-            [status-im.ui.components.chat-icon.screen :refer [contact-icon-contacts-tab]]
-            [status-im.ui.components.context-menu :refer [context-menu]]
-            [status-im.ui.components.contact.styles :as st]
-            [status-im.utils.gfycat.core :refer [generate-gfy]]
-            [status-im.i18n :refer [get-contact-translated label]]))
+  (:require-macros [status-im.utils.views :as views])
+  (:require [status-im.i18n :as i18n]
+            [status-im.ui.components.react :as react]
+            [status-im.ui.components.icons.vector-icons :as vector-icons]
+            [status-im.ui.components.chat-icon.screen :as chat-icon]
+            [status-im.ui.components.checkbox.view :as checkbox]
+            [status-im.ui.components.contact.styles :as styles]
+            [status-im.ui.components.list-selection :as list-selection]
+            [status-im.ui.components.list.views :as list]
+            [status-im.utils.gfycat.core :as gfycat]))
 
-(defn contact-photo [contact]
-  [view
-   [contact-icon-contacts-tab contact]])
-
-(defn contact-inner-view
-  ([{:keys [info style] {:keys [whisper-identity name] :as contact} :contact}]
-   [view (merge st/contact-inner-container style)
-    [contact-photo contact]
-    [view st/info-container
-     [text {:style           st/name-text
-            :number-of-lines 1}
+(defn- contact-inner-view
+  ([{:keys [info style props] {:keys [whisper-identity name dapp?] :as contact} :contact}]
+   [react/view (merge styles/contact-inner-container style)
+    [react/view
+     [chat-icon/contact-icon-contacts-tab contact]]
+    [react/view styles/info-container
+     [react/text (merge {:style           styles/name-text
+                         :number-of-lines 1}
+                        (when dapp? {:accessibility-label :dapp-name})
+                        props)
       (if (pos? (count (:name contact)))
-        (get-contact-translated whisper-identity :name name)
+        (i18n/get-contact-translated whisper-identity :name name)
         ;;TODO is this correct behaviour?
-        (generate-gfy whisper-identity))]
+        (gfycat/generate-gfy whisper-identity))]
      (when info
-       [text {:style st/info-text}
+       [react/text {:style styles/info-text}
         info])]]))
 
-(defn contact-view [{:keys [contact extended? on-press extend-options info]}]
-  [touchable-highlight (when-not extended?
-                         {:on-press (when on-press #(on-press contact))})
-   [view
-    [view st/contact-container
-     [contact-inner-view {:contact contact :info info}]
-     (when (and extended? (not (empty? extend-options)))
-       [view st/more-btn-container
-        [context-menu
-         [vi/icon :icons/options {:accessibility-label :options}]
-         extend-options
-         nil
-         st/more-btn]])]]])
+(defn contact-view [{:keys [style contact extended? on-press extend-options extend-title info show-forward?
+                            accessibility-label inner-props]
+                     :or   {accessibility-label :contact-item}}]
+  [react/touchable-highlight (merge {:accessibility-label accessibility-label}
+                                    (when-not extended?
+                                      {:on-press (when on-press #(on-press contact))}))
+   [react/view styles/contact-container
+    [contact-inner-view {:contact contact :info info :style style :props inner-props}]
+    (when show-forward?
+      [react/view styles/forward-btn
+       [vector-icons/icon :icons/forward]])
+    (when (and extended? (not (empty? extend-options)))
+      [react/view styles/more-btn-container
+       [react/touchable-highlight {:on-press            #(list-selection/show {:options extend-options
+                                                                               :title   extend-title})
+                                   :accessibility-label :menu-option}
+        [react/view styles/more-btn
+         [vector-icons/icon :icons/options {:accessibility-label :options}]]]])]])
 
-(defview toogle-contact-view [{:keys [whisper-identity] :as contact} selected-key on-toggle-handler]
-  [checked [selected-key whisper-identity]]
-  [touchable-highlight {:on-press #(on-toggle-handler checked whisper-identity)}
-   [view
-    [view (merge st/contact-container (when checked {:style st/selected-contact}))
-     [contact-inner-view (merge {:contact contact}
-                                (when checked {:style st/selected-contact}))]
-     [view (st/icon-check-container checked)
-      (when checked
-        [vi/icon :icons/ok {:style st/check-icon}])]]]])
+(views/defview toogle-contact-view [{:keys [whisper-identity] :as contact} selected-key on-toggle-handler]
+  (views/letsubs [checked [selected-key whisper-identity]]
+    [react/view {:accessibility-label :contact-item}
+     [list/list-item-with-checkbox
+      {:checked?        checked
+       :on-value-change #(on-toggle-handler checked whisper-identity)
+       :plain-checkbox? true}
+      [react/view styles/contact-container
+       [contact-inner-view {:contact contact}]]]]))

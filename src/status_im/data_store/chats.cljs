@@ -1,93 +1,42 @@
 (ns status-im.data-store.chats
-  (:require [status-im.data-store.realm.chats :as data-store])
+  (:require [cljs.core.async :as async]
+            [re-frame.core :as re-frame]
+            [status-im.data-store.realm.core :as core]
+            [status-im.data-store.realm.chats :as data-store])
   (:refer-clojure :exclude [exists?]))
 
-(defn- normalize-contacts
-  [item]
-  (update item :contacts vals))
+(re-frame/reg-cofx
+ :data-store/all-chats
+ (fn [cofx _]
+   (assoc cofx :all-stored-chats (data-store/get-all))))
 
-(defn get-all
-  []
-  (map normalize-contacts (data-store/get-all-active)))
+(re-frame/reg-fx
+ :data-store/save-chat
+ (fn [{:keys [chat-id] :as chat}]
+   (async/go (async/>! core/realm-queue #(data-store/save chat (data-store/exists? chat-id))))))
 
-(defn get-by-id
-  [id]
-  (data-store/get-by-id id))
+; Only used in debug mode
+(re-frame/reg-fx
+ :data-store/delete-chat
+ (fn [chat-id]
+   (async/go (async/>! core/realm-queue #(data-store/delete chat-id)))))
 
-(defn exists?
-  [chat-id]
-  (data-store/exists? chat-id))
+(re-frame/reg-fx
+ :data-store/deactivate-chat
+ (fn [chat-id]
+   (async/go (async/>! core/realm-queue #(data-store/set-inactive chat-id)))))
 
-(defn save
-  [{:keys [last-message-id chat-id] :as chat}] 
-  (data-store/save chat (data-store/exists? chat-id)))
+(re-frame/reg-fx
+ :data-store/add-chat-contacts
+ (fn [[chat-id contacts]]
+   (async/go (async/>! core/realm-queue #(data-store/add-contacts chat-id contacts)))))
 
-(defn delete
-  [chat-id]
-  (data-store/delete chat-id))
+(re-frame/reg-fx
+ :data-store/remove-chat-contacts
+ (fn [[chat-id contacts]]
+   (async/go (async/>! core/realm-queue #(data-store/remove-contacts chat-id contacts)))))
 
-(defn set-inactive
-  [chat-id]
-  (data-store/set-inactive chat-id))
-
-(defn get-contacts
-  [chat-id]
-  (data-store/get-contacts chat-id))
-
-(defn has-contact?
-  [chat-id identity]
-  (data-store/has-contact? chat-id identity))
-
-(defn add-contacts
-  [chat-id identities]
-  (data-store/add-contacts chat-id identities))
-
-(defn remove-contacts
-  [chat-id identities]
-  (data-store/remove-contacts chat-id identities))
-
-(defn save-property
-  [chat-id property-name value]
-  (data-store/save-property chat-id property-name value))
-
-(defn get-property
-  [chat-id property-name]
-  (data-store/get-property chat-id property-name))
-
-(defn is-active?
-  [chat-id]
-  (get-property chat-id :is-active))
-
-(defn removed-at
-  [chat-id]
-  (get-property chat-id :removed-at))
-
-(defn get-message-overhead
-  [chat-id]
-  (get-property chat-id :message-overhead))
-
-(defn get-active-group-chats
-  []
-  (data-store/get-active-group-chats))
-
-(defn set-active
-  [chat-id active?]
-  (save-property chat-id :is-active active?))
-
-(defn inc-message-overhead
-  [chat-id]
-  (save-property chat-id :message-overhead (inc (get-message-overhead chat-id))))
-
-(defn reset-message-overhead
-  [chat-id]
-  (save-property chat-id :message-overhead 0))
-
-(defn new-update?
-  [timestamp chat-id]
-  (let
-    [{:keys [added-to-at removed-at removed-from-at added-at]}
-     (get-by-id chat-id)]
-    (and (> timestamp added-to-at)
-         (> timestamp removed-at)
-         (> timestamp removed-from-at)
-         (> timestamp added-at))))
+(re-frame/reg-fx
+ :data-store/save-chat-property
+ (fn [[chat-id prop value]]
+   (async/go (async/>! core/realm-queue #(data-store/save-property chat-id prop value)))))

@@ -1,32 +1,33 @@
 (ns status-im.ui.components.common.styles
-  (:require-macros [status-im.utils.styles :refer [defstyle]])
-  (:require [status-im.ui.components.styles :as styles]))
+  (:require-macros [status-im.utils.styles :refer [defstyle defnstyle]])
+  (:require [status-im.ui.components.styles :as styles]
+            [status-im.ui.components.colors :as colors]))
 
 (def gradient-top
-  {:flexDirection   :row
-   :height          3
-   :backgroundColor styles/color-light-gray})
+  {:flex-direction   :row
+   :height           3
+   :background-color colors/gray-lighter})
 
 (def gradient-top-colors
   ["rgba(25, 53, 76, 0.01)"
    "rgba(25, 53, 76, 0.1)"])
 
 (def gradient-bottom
-  {:flexDirection   :row
-   :height          2
-   :backgroundColor styles/color-light-gray})
+  {:flex-direction   :row
+   :height           2
+   :background-color colors/gray-lighter})
 
 (def gradient-bottom-colors
   ["rgba(25, 53, 76, 0.1)"
    "rgba(25, 53, 76, 0.01)"])
 
 (def separator-wrapper
-  {:background-color styles/color-white})
+  {:background-color colors/white})
 
 (defstyle separator
   {:android {:height 0}
    :ios     {:height           1
-             :background-color styles/color-gray5
+             :background-color colors/gray-light
              :opacity          0.5}})
 
 (def list-separator
@@ -40,23 +41,14 @@
    :padding-right  16
    :flex           1
    :flex-direction :row
-   :ios            {:background-color styles/color-white
+   :ios            {:background-color colors/white
                     :padding-top      19
                     :padding-bottom   15
                     :margin-top       16}
-   :android        {:background-color styles/color-light-gray
+   :android        {:background-color colors/gray-lighter
                     :padding-top      20
                     :padding-bottom   17
                     :margin-top       8}})
-
-(defstyle form-title-extend-container
-  {:ios     {:margin-top       16
-             :background-color styles/color-white}
-   :android {:margin-top       8
-             :background-color styles/color-light-gray}})
-
-(def form-title-extend-button
-  {:padding 16})
 
 (defstyle form-title
   {:flex-shrink 1
@@ -79,7 +71,7 @@
    :android {:height 11}})
 
 (defstyle list-header-footer-spacing
-  {:android {:background-color styles/color-white
+  {:android {:background-color colors/white
              :height           8}})
 
 (def network-container
@@ -90,7 +82,7 @@
 
 (defn network-text [text-color]
   {:flex           1
-   :color          (or text-color styles/color-black)
+   :color          (or text-color colors/black)
    :letter-spacing -0.2
    :font-size      14
    :margin-left    16})
@@ -102,3 +94,74 @@
    :background-color styles/color-green-4
    :align-items      :center
    :justify-content  :center})
+
+(defstyle label-action-text
+  {:padding-right 16
+   :color         colors/blue
+   :ios           {:font-size 15}
+   :android       {:font-size 14}})
+
+(defstyle logo-shaddow
+  {:ios     {:shadowColor   colors/black
+             :shadowOffset  {:height 5}
+             :shadowRadius  10
+             :shadowOpacity 0.14}
+   :android {:elevation 2}})
+
+(defn logo-container [size shadow?]
+  (merge
+   {:width            size
+    :height           size
+    :border-radius    size
+    :background-color colors/blue
+    :align-items      :center
+    :justify-content  :center}
+   (when shadow?
+     logo-shaddow)))
+
+(defn logo [icon-size]
+  {:color  :white
+   :width  icon-size
+   :height icon-size})
+
+(defn bottom-button [disabled?]
+  {:flex-direction :row
+   :align-items    :center
+   :opacity        (if disabled? 0.4 1)})
+
+(def bottom-button-label
+  {:font-size      15
+   :letter-spacing -0.2
+   :color          colors/blue})
+
+(defn button [style background?]
+  (merge
+   {:padding-vertical   12
+    :padding-horizontal 42
+    :border-radius      8}
+   style
+   (when background?
+     {:background-color (colors/alpha colors/blue 0.1)})))
+
+(def button-label
+  {:font-size      15
+   :letter-spacing -0.2
+   :text-align     :center
+   :color          colors/blue})
+
+(defn counter-container [size]
+  {:width            size
+   :height           size
+   :border-radius    (/ size 2)
+   :background-color colors/blue
+   :align-items      :center
+   :justify-content  :center})
+
+(defn counter-label [size]
+  {:font-size      (/ size 2)
+   :letter-spacing -0.2
+   :text-align     :center
+   :color          colors/white})
+
+(def image-contain
+  {:align-self :stretch})

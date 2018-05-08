@@ -17,23 +17,20 @@
 (deftest init-console-chat
   (testing "initialising console if console is already added to chats, should not modify anything"
     (let [db {:chats {const/console-chat-id console-chat/chat}}
-          fx (chat-events/init-console-chat db)]
-      (is (= db (:db fx)))
-      (is (= #{:db} (-> fx keys set)))))
+          fx (chat-events/init-console-chat {:db db})]
+      (is (not fx))))
 
   (testing "initialising console without existing account and console chat not initialisated"
-    (let [fresh-db {:chats {}
-                    :accounts/current-account-id nil}
-          {:keys [db dispatch-n]} (chat-events/init-console-chat fresh-db)]
+    (let [fresh-db {:chats {}}
+          {:keys [db dispatch-n]} (chat-events/init-console-chat {:db fresh-db})]
       (is (= (:current-chat-id db)
              (:chat-id console-chat/chat)))
       (is (= (:current-chat-id db)
              const/console-chat-id))))
 
   (testing "initialising console with existing account and console chat not initialisated"
-    (let [fresh-db {:chats {}
-                    :accounts/current-account-id (:whisper-identity contact)}
-          {:keys [db dispatch-n]} (chat-events/init-console-chat fresh-db)]
+    (let [fresh-db {:chats {}}
+          {:keys [db dispatch-n]} (chat-events/init-console-chat {:db fresh-db})]
       (is (= (:current-chat-id db)
              (:chat-id console-chat/chat)))
       (is (= (:current-chat-id db)

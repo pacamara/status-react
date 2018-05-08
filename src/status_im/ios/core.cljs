@@ -8,27 +8,16 @@
             status-im.data-store.core
             [status-im.ui.screens.views :as views]
             [status-im.ui.components.react :as react]
-            [status-im.native-module.core :as status]
-            [status-im.utils.error-handler :as error-handler]
-            [status-im.utils.utils :as utils]
-            [status-im.utils.config :as config]
             [status-im.utils.notifications :as notifications]
-            [status-im.core :as core]))
-
-(defn orientation->keyword [o]
-  (keyword (.toLowerCase o)))
+            [status-im.core :as core]
+            [status-im.utils.instabug :as instabug]
+            [status-im.utils.snoopy :as snoopy]))
 
 (defn app-root []
   (let [keyboard-height (subscribe [:get :keyboard-height])]
     (reagent/create-class
       {:component-will-mount
        (fn []
-         (let [o (orientation->keyword (.getInitialOrientation react/orientation))]
-           (dispatch [:set :orientation o]))
-         (.addOrientationListener
-          react/orientation
-          #(dispatch [:set :orientation (orientation->keyword %)]))
-         (.lockToPortrait react/orientation)
          (.addListener react/keyboard
                        "keyboardWillShow"
                        (fn [e]
@@ -43,10 +32,8 @@
          (.hide react/splash-screen))
        :component-did-mount
        (fn []
-         (when config/notifications-wip-enabled?
-           (notifications/request-permissions)
-           (notifications/on-refresh-fcm-token)
-           (notifications/on-notification)))
+         (notifications/on-refresh-fcm-token)
+         (notifications/on-notification))
        :component-will-unmount
        (fn []
          (.stop react/http-bridge))
@@ -54,4 +41,6 @@
        :reagent-render views/main})))
 
 (defn init []
-  (core/init app-root))
+  (core/init app-root)
+  (snoopy/subscribe!)
+  (instabug/init))

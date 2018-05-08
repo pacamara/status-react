@@ -1,74 +1,84 @@
 (ns status-im.ui.screens.wallet.request.views
   (:require-macros [status-im.utils.views :as views])
-  (:require
-    [re-frame.core :as re-frame]
-    [status-im.ui.components.react :as react]
-    [status-im.ui.components.qr-code :as components.qr-code]
-    [status-im.ui.components.toolbar.actions :as actions]
-    [status-im.ui.components.toolbar.view :as toolbar]
-    [status-im.ui.components.status-bar.view :as status-bar]
-    [status-im.ui.screens.wallet.styles :as wallet.styles]
-    [status-im.ui.components.common.common :as common]
-    [status-im.ui.components.icons.vector-icons :as vi]
-    [status-im.ui.screens.wallet.components.views :as components]
-    [status-im.ui.screens.wallet.request.styles :as styles]
-    [status-im.ui.components.styles :as components.styles]
-    [status-im.i18n :as i18n]
-    [status-im.utils.platform :as platform]
-    [status-im.utils.ethereum.eip681 :as eip681]
-    [status-im.utils.money :as money]))
+  (:require [re-frame.core :as re-frame]
+            [status-im.i18n :as i18n]
+            [status-im.ui.components.bottom-buttons.view :as bottom-buttons]
+            [status-im.ui.components.button.view :as button]
+            [status-im.ui.components.common.common :as common]
+            [status-im.ui.components.icons.vector-icons :as vector-icons]
+            [status-im.ui.components.list-selection :as list-selection]
+            [status-im.ui.components.qr-code-viewer.views :as qr-code-viewer]
+            [status-im.ui.components.react :as react]
+            [status-im.ui.components.status-bar.view :as status-bar]
+            [status-im.ui.components.toolbar.actions :as actions]
+            [status-im.ui.components.toolbar.view :as toolbar]
+            [status-im.ui.screens.wallet.request.styles :as styles]
+            [status-im.ui.screens.wallet.styles :as wallet.styles]
+            [status-im.ui.components.styles :as components.styles]
+            [status-im.ui.screens.wallet.components :as comp]
+            [status-im.ui.screens.wallet.components.views :as components]
+            [status-im.utils.ethereum.core :as ethereum]
+            [status-im.utils.ethereum.eip681 :as eip681]
+            [status-im.utils.money :as money]
+            [status-im.utils.utils :as utils]))
 
-(defn toolbar-view []
-  [toolbar/toolbar {:style wallet.styles/toolbar :hide-border? true}
-   [toolbar/nav-button (actions/back-white actions/default-handler)]
-   [toolbar/content-title {:color :white} (i18n/label :t/request-transaction)]])
+;; Request screen
 
-(defn send-request []
-  (re-frame/dispatch [:navigate-to-modal
-                      :contact-list-modal
-                      {:handler #(re-frame/dispatch [:wallet-send-request %1])
-                       :action  :request
-                       :params  {:hide-actions? true}}]))
+(views/defview send-transaction-request []
+  ;; TODO(jeluard) both send and request flows should be merged
+  (views/letsubs [{:keys [to to-name whisper-identity]} [:wallet.send/transaction]
+                  {:keys [amount amount-error]}         [:wallet.request/transaction]
+                  scroll (atom nil)]
+    [comp/simple-screen {:avoid-keyboard? true}
+     [comp/toolbar (i18n/label :t/new-request)]
+     [react/view components.styles/flex
+      [common/network-info {:text-color :white}]
+      [react/scroll-view {:ref #(reset! scroll %) :keyboardShouldPersistTaps :always}
+       [react/view styles/request-details-wrapper
+        [components/recipient-selector {:contact-only? true
+                                        :address       to
+                                        :name          to-name
+                                        :request?      true}]
+        [components/asset-selector {:disabled? true
+                                    :symbol    :ETH}]
+        [components/amount-selector {:error         amount-error
+                                     :input-options {:default-value  (str (money/to-fixed (money/wei->ether amount)))
+                                                     :max-length     21
+                                                     :on-focus       (fn [] (when @scroll (utils/set-timeout #(.scrollToEnd @scroll) 100)))
+                                                     :on-change-text #(re-frame/dispatch [:wallet.request/set-and-validate-amount %])}}]]]
+      [bottom-buttons/bottom-buttons styles/bottom-buttons
+       nil ;; Force a phantom button to ensure consistency with other transaction screens which define 2 buttons
+       [button/button {:disabled?           (not (and to amount))
+                       :on-press            #(re-frame/dispatch [:wallet-send-request whisper-identity amount])
+                       :text-style          {:padding-horizontal 0}
+                       :accessibility-label :sent-request-button}
+        (i18n/label :t/send-request)
+        [vector-icons/icon :icons/forward {:color :white}]]]]]))
 
-(views/defview qr-code [amount]
-  (views/letsubs [account [:get-current-account]
-                  chain-id [:get-network-id]]
-    [components.qr-code/qr-code
-     {:value   (eip681/generate-uri (:address account) (merge {:chain-id chain-id} (when amount {:value amount})))
-      :size    256}]))
+;; Main screen
+
+(defn- qr-code [address chain-id]
+  [qr-code-viewer/qr-code-viewer {:hint-style styles/hint :footer-style styles/footer}
+   (eip681/generate-uri address {:chain-id chain-id})
+   (i18n/label :t/request-qr-legend)
+   address])
 
 (views/defview request-transaction []
-  ;;Because input field is in the end of view we will scroll to the end on input focus event
-  (views/letsubs [amount           [:get-in [:wallet/request-transaction :amount]]
-                  amount-error     [:get-in [:wallet/request-transaction :amount-error]]
-                  request-enabled? [:wallet.request/request-enabled?]
-                  scroll           (atom nil)]
-    [react/keyboard-avoiding-view wallet.styles/wallet-modal-container
-     [status-bar/status-bar {:type :wallet}]
-     [toolbar-view]
-     [common/network-info {:text-color :white}]
-     [react/scroll-view {:ref #(reset! scroll %)}
-      [react/view components.styles/flex
-        [react/view styles/network-container
-         [react/view styles/qr-container
-          [qr-code amount]]]
-        [react/view wallet.styles/choose-wallet-container
-         [components/choose-wallet]]
-        [react/view wallet.styles/amount-container
-         [components/amount-input
-          {:error         amount-error
-           :input-options {:on-focus (fn [] (when @scroll (js/setTimeout #(.scrollToEnd @scroll) 100)))
-                           :on-change-text #(re-frame/dispatch [:wallet.request/set-and-validate-amount %])}}]
-         [react/view wallet.styles/choose-currency-container
-          [components/choose-currency wallet.styles/choose-currency]]]]]
-     [components/separator]
-     [react/view wallet.styles/buttons-container
-      [react/touchable-highlight {:style wallet.styles/button :disabled true}
-       [react/view (wallet.styles/button-container false)
-        [vi/icon :icons/share {:color :white :container-style styles/share-icon-container}]
-        [components/button-text (i18n/label :t/share)]]]
-      [react/view components.styles/flex]
-      [react/touchable-highlight {:style wallet.styles/button :disabled (not request-enabled?) :on-press send-request}
-       [react/view (wallet.styles/button-container request-enabled?)
-        [components/button-text (i18n/label :t/send-request)]
-        [vi/icon :icons/forward {:color :white :container-style wallet.styles/forward-icon-container}]]]]]))
+  (views/letsubs [address-hex       [:get-current-account-hex]
+                  chain-id          [:get-network-id]]
+    [comp/simple-screen
+     [comp/toolbar {}
+      comp/default-action
+      (i18n/label :t/receive)
+      [toolbar/actions [{:icon      :icons/share
+                         :icon-opts {:color               :white
+                                     :accessibility-label :share-button}
+                         :handler   #(list-selection/open-share {:message address-hex})}]]]
+     [react/view {:flex 1}
+      [common/network-info {:text-color :white}]
+      [react/scroll-view styles/request-wrapper
+       [qr-code address-hex chain-id]
+       [button/primary-button {:on-press            #(re-frame/dispatch [:navigate-to :wallet-send-transaction-request])
+                               :style               styles/send-request
+                               :accessibility-label :sent-transaction-request-button}
+        (i18n/label :t/send-transaction-request)]]]]))

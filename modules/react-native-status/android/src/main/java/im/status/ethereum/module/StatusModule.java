@@ -1,9 +1,12 @@
 package im.status.ethereum.module;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.*;
 import android.view.WindowManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
@@ -39,15 +42,17 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
     private ExecutorService executor = null;
     private boolean debug;
     private boolean devCluster;
+    private String logLevel;
     private Jail jail;
 
-    StatusModule(ReactApplicationContext reactContext, boolean debug, boolean devCluster, boolean jscEnabled) {
+    StatusModule(ReactApplicationContext reactContext, boolean debug, boolean devCluster, boolean jscEnabled, String logLevel) {
         super(reactContext);
         if (executor == null) {
             executor = Executors.newCachedThreadPool();
         }
         this.debug = debug;
         this.devCluster = devCluster;
+        this.logLevel = logLevel;
         reactContext.addLifecycleEventListener(this);
         if(jscEnabled) {
             jail = new JSCJail(this);
@@ -109,6 +114,42 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
         WritableMap params = Arguments.createMap();
         params.putString("jsonEvent", jsonEvent);
         this.getReactApplicationContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("gethEvent", params);
+    }
+
+    private String prepareLogsFile() {
+        String gethLogFileName = "geth.log";
+        File pubDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File logFile = new File(pubDirectory, gethLogFileName);
+
+        try {
+            logFile.setReadable(true);
+            File parent = logFile.getParentFile();
+            if (!parent.canWrite()) {
+                return null;
+            }
+            if (!parent.exists()) {
+                parent.mkdirs();
+            }
+            logFile.createNewFile();
+            logFile.setWritable(true);
+            Log.d(TAG, "Can write " + logFile.canWrite());
+            Uri gethLogUri = Uri.fromFile(logFile);
+            try {
+                Log.d(TAG, "Attach to geth.log to instabug " + gethLogUri.getPath());
+                Instabug.setFileAttachment(gethLogUri, gethLogFileName);
+            } catch (NullPointerException e) {
+                Log.d(TAG, "Instabug is not initialized!");
+            }
+
+            String gethLogFilePath = logFile.getAbsolutePath();
+            Log.d(TAG, gethLogFilePath);
+
+            return gethLogFilePath;
+        } catch (Exception e) {
+            Log.d(TAG, "Can't create geth.log file! " + e.getMessage());
+        }
+
+        return null;
     }
 
     private void doStartNode(final String defaultConfig) {
@@ -176,11 +217,14 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
         try {
             JSONObject customConfig = new JSONObject(defaultConfig);
             JSONObject jsonConfig = new JSONObject(config);
-            String gethLogFileName = "geth.log";
-            jsonConfig.put("LogEnabled", false);
-            jsonConfig.put("LogFile", gethLogFileName);
-            jsonConfig.put("LogLevel", "INFO");
-            jsonConfig.put("DataDir", root + customConfig.get("DataDir"));
+
+            String gethLogFilePath = prepareLogsFile();
+            boolean logsEnabled = (gethLogFilePath != null) && !TextUtils.isEmpty(this.logLevel);
+            String dataDir = root + customConfig.get("DataDir");
+            jsonConfig.put("LogEnabled", (gethLogFilePath != null && logsEnabled));
+            jsonConfig.put("LogFile", gethLogFilePath);
+            jsonConfig.put("LogLevel", TextUtils.isEmpty(this.logLevel) ? "ERROR" : this.logLevel.toUpperCase());
+            jsonConfig.put("DataDir", dataDir);
             jsonConfig.put("NetworkId", customConfig.get("NetworkId"));
             try {
                 Object upstreamConfig = customConfig.get("UpstreamConfig");
@@ -191,30 +235,17 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             } catch (Exception e) {
 
             }
-            jsonConfig.put("KeyStoreDir", newKeystoreDir);
-            String gethLogPath = dataFolder + "/" + gethLogFileName;
-            File logFile = new File(gethLogPath);
-            if (logFile.exists()) {
-                logFile.delete();
-            }
             try {
-                logFile.setReadable(true);
-                File parent = logFile.getParentFile();
-                if (!parent.exists()) {
-                    parent.mkdirs();
+                JSONObject whisperConfig = (JSONObject) jsonConfig.get("WhisperConfig");
+                if (whisperConfig == null) {
+                    whisperConfig = new JSONObject();
                 }
-                logFile.createNewFile();
-                logFile.setReadable(true);
+                whisperConfig.put("LightClient", true);
+                jsonConfig.put("WhisperConfig", whisperConfig);
             } catch (Exception e) {
-                Log.d(TAG, "Can't create geth.log file!");
+
             }
-            Uri gethLogUri = Uri.fromFile(logFile);
-            try {
-                Log.d(TAG, "Attach to geth.log to instabug " + gethLogUri.getPath());
-                Instabug.setFileAttachment(gethLogUri, gethLogFileName);
-            } catch (NullPointerException e) {
-                Log.d(TAG, "Instabug is not initialized!");
-            }
+            jsonConfig.put("KeyStoreDir", newKeystoreDir);
 
             config = jsonConfig.toString();
         } catch (JSONException e) {
@@ -222,10 +253,24 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             Log.d(TAG, "Default configuration will be used");
         }
 
-        Log.d(TAG, "Node config " + config);
+        String configOutput = config;
+        final int maxOutputLen = 4000;
+        while (!configOutput.isEmpty()) {
+            Log.d(TAG, "Node config:" + configOutput.substring(0, Math.min(maxOutputLen, configOutput.length())));
+            if (configOutput.length() > maxOutputLen) {
+                configOutput = configOutput.substring(maxOutputLen);
+            } else {
+                break;
+            }
+        }
 
         String res = Statusgo.StartNode(config);
-        Log.d(TAG, "StartNode result: " + res);
+        if (res.startsWith("{\"error\":\"\"")) {
+            Log.d(TAG, "StartNode result: " + res);
+        }
+        else {
+            Log.e(TAG, "StartNode failed: " + res);
+        }
         Log.d(TAG, "Geth node started");
 	status.sendMessage();
     }
@@ -317,20 +362,20 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             return;
         }
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
                 doStartNode(config);
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     @ReactMethod
     public void stopNode() {
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
                 Log.d(TAG, "stopNode");
@@ -338,7 +383,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     @ReactMethod
@@ -351,7 +396,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
 
         jail.reset();
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
                 String result = Statusgo.Login(address, password);
@@ -360,7 +405,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     @ReactMethod
@@ -371,7 +416,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             return;
         }
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
                 String res = Statusgo.CreateAccount(password);
@@ -380,27 +425,27 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     @ReactMethod
-    public void notify(final String token, final Callback callback) {
-        Log.d(TAG, "notify");
+    public void notifyUsers(final String message, final String payloadJSON, final String tokensJSON, final Callback callback) {
+        Log.d(TAG, "notifyUsers");
         if (!checkAvailability()) {
             callback.invoke(false);
             return;
         }
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
                 @Override
                 public void run() {
-                    String res = Statusgo.Notify(token);
+                    String res = Statusgo.NotifyUsers(message, payloadJSON, tokensJSON);
 
                     callback.invoke(res);
                 }
             };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     @ReactMethod
@@ -411,7 +456,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             return;
         }
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
                 @Override
                 public void run() {
                     String res = Statusgo.AddPeer(enode);
@@ -420,7 +465,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
                 }
             };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
 
@@ -431,7 +476,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             callback.invoke(false);
             return;
         }
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
                 String res = Statusgo.RecoverAccount(password, passphrase);
@@ -440,7 +485,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     private String createIdentifier() {
@@ -448,40 +493,40 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
     }
 
     @ReactMethod
-    public void completeTransactions(final String hashes, final String password, final Callback callback) {
-        Log.d(TAG, "completeTransactions");
+    public void approveSignRequests(final String hashes, final String password, final Callback callback) {
+        Log.d(TAG, "approveSignRequests");
         if (!checkAvailability()) {
             callback.invoke(false);
             return;
         }
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
-                String res = Statusgo.CompleteTransactions(hashes, password);
+                String res = Statusgo.ApproveSignRequests(hashes, password);
                 callback.invoke(res);
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
 
     @ReactMethod
-    public void discardTransaction(final String id) {
-        Log.d(TAG, "discardTransaction");
+    public void discardSignRequest(final String id) {
+        Log.d(TAG, "discardSignRequest");
         if (!checkAvailability()) {
             return;
         }
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
-                Statusgo.DiscardTransaction(id);
+                Statusgo.DiscardSignRequest(id);
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     // Jail
@@ -494,7 +539,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             return;
         }
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
                 jail.initJail(js);
@@ -503,7 +548,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     @ReactMethod
@@ -529,16 +574,11 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             callback.invoke(false);
             return;
         }
-
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "startCallJail");
-                String res = jail.callJail(chatId, path, params);
-                Log.d(TAG, "endCallJail");
-                callback.invoke(res);
-            }
-        });
+        
+        Log.d(TAG, "startCallJail");
+        String res = jail.callJail(chatId, path, params);
+        Log.d(TAG, "endCallJail");
+        callback.invoke(res);
     }
 
     @ReactMethod
@@ -650,7 +690,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
 
     @ReactMethod
     public void sendWeb3Request(final String payload, final Callback callback) {
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
                 String res = Statusgo.CallRPC(payload);
@@ -658,11 +698,55 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
+    }
+
+    @ReactMethod
+    public void sendWeb3PrivateRequest(final String payload, final Callback callback) {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                String res = Statusgo.CallPrivateRPC(payload);
+                callback.invoke(res);
+            }
+        };
+
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     @ReactMethod
     public void closeApplication() {
         System.exit(0);
+    }
+
+    @ReactMethod
+    public void connectionChange(final String type, final boolean isExpensive) {
+        Log.d(TAG, "ConnectionChange: " + type + ", is expensive " + isExpensive);
+        Statusgo.ConnectionChange(type, isExpensive ? 1 : 0);
+    }
+
+    @ReactMethod
+    public void appStateChange(final String type) {
+        Log.d(TAG, "AppStateChange: " + type);
+        Statusgo.AppStateChange(type);
+    }
+
+    private static String uniqueID = null;
+    private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
+
+    @ReactMethod
+    public void getDeviceUUID(final Callback callback) {
+        if (uniqueID == null) {
+            SharedPreferences sharedPrefs = this.getReactApplicationContext().getSharedPreferences(
+                    PREF_UNIQUE_ID, Context.MODE_PRIVATE);
+            uniqueID = sharedPrefs.getString(PREF_UNIQUE_ID, null);
+            if (uniqueID == null) {
+                uniqueID = UUID.randomUUID().toString();
+                SharedPreferences.Editor editor = sharedPrefs.edit();
+                editor.putString(PREF_UNIQUE_ID, uniqueID);
+                editor.commit();
+            }
+        }
+        callback.invoke(uniqueID);
     }
 }

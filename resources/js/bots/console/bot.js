@@ -1,43 +1,41 @@
-function jsSuggestionsContainerStyle(suggestionsCount) {
-    return {
-        marginVertical: 1,
-        marginHorizontal: 0,
-        keyboardShouldPersistTaps: "always",
-        //height: Math.min(150, (56 * suggestionsCount)),
-        backgroundColor: "white",
-        borderRadius: 5,
-        keyboardShouldPersistTaps: "always"
-    };
-}
-
 var jsSuggestionContainerStyle = {
-    paddingLeft: 16,
     backgroundColor: "white"
 };
 
 var jsSubContainerStyle = {
-    //height: 56,
     paddingTop: 9,
     borderBottomWidth: 1,
     borderBottomColor: "#0000001f"
 };
 
+function jsSuggestionSubContainerStyle(isLast) {
+    var borderBottomWidth = (isLast ? 0 : 1);
+
+    return {
+        paddingTop: 14,
+        paddingBottom: 14,
+        paddingRight: 14,
+        marginLeft: 14,
+        borderBottomWidth: borderBottomWidth,
+        borderBottomColor: "#e8ebec"
+    };
+}
+
 var jsValueStyle = {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: "font",
     color: "#000000de"
 };
 
 var jsBoldValueStyle = {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: "font",
     color: "#000000de",
     fontWeight: "bold"
 };
 
 var jsDescriptionStyle = {
-    marginTop: 1.5,
-    paddingBottom: 9,
+    marginTop: 2,
     fontSize: 14,
     fontFamily: "font",
     color: "#838c93de"
@@ -324,7 +322,7 @@ function jsSuggestions(params, context) {
             suggestion.title = createMarkupText(suggestion.title);
         }
         var suggestionMarkup = status.components.view(jsSuggestionContainerStyle,
-            [status.components.view(jsSubContainerStyle,
+            [status.components.view(jsSuggestionSubContainerStyle(i == suggestions.length - 1),
                 [
                     status.components.text({style: jsValueStyle},
                         suggestion.title),
@@ -342,10 +340,7 @@ function jsSuggestions(params, context) {
     }
 
     if (sugestionsMarkup.length > 0) {
-        var view = status.components.scrollView(jsSuggestionsContainerStyle(sugestionsMarkup.length),
-            sugestionsMarkup
-        );
-        return {markup: view};
+        return {markup: status.components.view({}, sugestionsMarkup)};
     } else {
         return {markup: null};
     }
@@ -371,39 +366,41 @@ function jsHandler(params, context) {
     return result;
 }
 
-function suggestionsContainerStyle(suggestionsCount) {
-    return {
-        marginVertical: 1,
-        marginHorizontal: 0,
-        keyboardShouldPersistTaps: "always",
-        height: Math.min(150, (56 * suggestionsCount)),
-        backgroundColor: "white",
-        borderRadius: 5,
-        flexGrow: 1
-    };
+var suggestionsContainerStyle = {
+    keyboardShouldPersistTaps: "always",
+    backgroundColor: "white",
+    flexGrow: 1,
+    bounces: false
 }
 
 var suggestionContainerStyle = {
-    paddingLeft: 16,
     backgroundColor: "white"
 };
 
-var suggestionSubContainerStyle = {
-    height: 56,
-    borderBottomWidth: 1,
-    borderBottomColor: "#0000001f"
-};
+function suggestionSubContainerStyle(isTwoLineEntry, isLast) {
+    var height = (isTwoLineEntry ? 64 : 48);
+    var borderBottomWidth = (isLast ? 0 : 1);
+
+    return {
+        paddingTop: 14,
+        paddingBottom: 14,
+        paddingRight: 14,
+        marginLeft: 14,
+        height: height,
+        borderBottomWidth: borderBottomWidth,
+        borderBottomColor: "#e8ebec"
+    };
+}
 
 var valueStyle = {
-    marginTop: 9,
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: "font",
     color: "#000000de"
 };
 
 var descriptionStyle = {
-    marginTop: 1.5,
-    fontSize: 14,
+    marginTop: 2,
+    fontSize: 13,
     fontFamily: "font",
     color: "#838c93de"
 };
@@ -412,87 +409,6 @@ function startsWith(str1, str2) {
     // String.startsWith(...) doesn't work in otto
     return str1.lastIndexOf(str2, 0) == 0 && str1 != str2;
 }
-
-function phoneSuggestions(params, context) {
-    var ph, suggestions;
-    if (!params.phone || params.phone == "") {
-        ph = context.suggestions;
-    } else {
-        ph = context.suggestions.filter(function (phone) {
-            return startsWith(phone.number, params.phone);
-        });
-    }
-
-    if (ph.length == 0) {
-        return;
-    }
-
-    suggestions = ph.map(function (phone) {
-        return status.components.view(suggestionContainerStyle,
-                [status.components.view(suggestionSubContainerStyle,
-                    [
-                        status.components.text(
-                            {style: valueStyle},
-                            phone.number
-                        ),
-                        status.components.text(
-                            {style: descriptionStyle},
-                            phone.description
-                        )
-                    ])]);
-    });
-
-    var view = status.components.scrollView(
-        suggestionsContainerStyle(ph.length),
-        suggestions
-    );
-
-    return {markup: view};
-}
-
-var phoneConfig = {
-    name: "phone",
-    icon: "phone_white",
-    color: "#5bb2a2",
-    title: I18n.t('phone_title'),
-    scope: ["personal-chats", "registered", "dapps"],
-    description: I18n.t('phone_description'),
-    sequentialParams: true,
-    validator: function (params) {
-        return {
-            validationHandler: "phone",
-            parameters: [params.phone]
-        };
-    },
-    params: [{
-        name: "phone",
-        type: status.types.PHONE,
-        suggestions: phoneSuggestions,
-        placeholder: I18n.t('phone_placeholder')
-    }],
-    preview: function (params) {
-        if (params) {
-            return {
-                markup: status.components.text(
-                    {},
-                    params.phone
-                )
-            };
-        }
-    },
-    shortPreview: function (params) {
-        if (params) {
-            return {
-                markup: status.components.chatPreviewText(
-                    {},
-                    params.phone
-                )
-            };
-        }
-    }
-};
-status.command(phoneConfig);
-status.response(phoneConfig);
 
 var ropstenNetworkId = 3;
 var rinkebyNetworkId = 4;
@@ -524,13 +440,15 @@ function getFaucets(networkId) {
 var faucets = getFaucets(status.ethereumNetworkId);
 
 function faucetSuggestions(params) {
-    var suggestions = faucets.map(function (entry) {
+    var subContainerStyle = suggestionSubContainerStyle(true, false);
+
+    var suggestions = faucets.map(function (entry, index) {
         return status.components.touchable(
-            {onPress: status.components.dispatch([status.events.SET_COMMAND_ARGUMENT, [0, entry.url, false]])},
+            {onPress: status.components.dispatch([status.events.SET_COMMAND_ARGUMENT, [0, entry.url, true]])},
             status.components.view(
                 suggestionContainerStyle,
                 [status.components.view(
-                    suggestionSubContainerStyle,
+                    (index == faucets.length - 1 ? suggestionSubContainerStyle(true, true) : subContainerStyle),
                     [
                         status.components.text(
                             {style: valueStyle},
@@ -546,12 +464,7 @@ function faucetSuggestions(params) {
         );
     });
 
-    var view = status.components.scrollView(
-        suggestionsContainerStyle(faucets.length),
-        suggestions
-    );
-
-    return {markup: view};
+    return {markup: status.components.view({}, suggestions)};
 }
 
 var faucetCommandConfig ={
@@ -604,13 +517,16 @@ if (faucets.length > 0) {
 }
 
 function debugSuggestions(params) {
-    var suggestions = ["On", "Off"].map(function (entry) {
+    var values = ["On", "Off"];
+    var subContainerStyle = suggestionSubContainerStyle(false, false);
+
+    var suggestions = values.map(function (entry, index) {
         return status.components.touchable(
-            {onPress: status.components.dispatch([status.events.SET_COMMAND_ARGUMENT, [0, entry, false]])},
+            {onPress: status.components.dispatch([status.events.SET_COMMAND_ARGUMENT, [0, entry, true]])},
             status.components.view(
                 suggestionContainerStyle,
                 [status.components.view(
-                    suggestionSubContainerStyle,
+                    (index == values.length - 1 ? suggestionSubContainerStyle(false, true) : subContainerStyle),
                     [
                         status.components.text(
                             {style: valueStyle},
@@ -622,12 +538,7 @@ function debugSuggestions(params) {
         );
     });
 
-    var view = status.components.scrollView(
-        suggestionsContainerStyle(faucets.length),
-        suggestions
-    );
-
-    return {markup: view};
+    return {markup: status.components.view({}, suggestions)};
 }
 
 status.command({
@@ -656,104 +567,6 @@ status.command({
                 I18n.t('debug_mode_title') + ": " + params.mode
             )
         };
-    }
-});
-
-status.response({
-    name: "confirmation-code",
-    color: "#7099e6",
-    scope: ["personal-chats", "registered", "dapps"],
-    description: I18n.t('confirm_description'),
-    sequentialParams: true,
-    params: [{
-        name: "code",
-        type: status.types.NUMBER
-    }],
-    validator: function (params) {
-        if (!/^[\d]{4}$/.test(params.code)) {
-            var error = status.components.validationMessage(
-                I18n.t('confirm_validation_title'),
-                I18n.t('confirm_validation_description')
-            );
-
-            return {markup: error};
-        }
-    },
-    preview: function (params) {
-        return {
-            markup: status.components.text(
-                {},
-                params.code
-            )
-        };
-    },
-    shortPreview: function (params) {
-        return {
-            markup: status.components.chatPreviewText(
-                {},
-                params.code
-            )
-        };
-    }
-});
-
-status.response({
-    name: "password",
-    color: "#7099e6",
-    scope: ["personal-chats", "anonymous", "dapps"],
-    description: I18n.t('password_description'),
-    icon: "lock_white",
-    sequentialParams: true,
-    params: [
-        {
-            name: "password",
-            type: status.types.PASSWORD,
-            placeholder: I18n.t('password_placeholder'),
-            hidden: true
-        },
-        {
-            name: "password-confirmation",
-            type: status.types.PASSWORD,
-            placeholder: I18n.t('password_placeholder2'),
-            hidden: true
-        }
-    ],
-    validator: function (params, context) {
-        if (!params.hasOwnProperty("password-confirmation") || params["password-confirmation"].length === 0) {
-            if (params.password === null || params.password.length < 6) {
-                var error = status.components.validationMessage(
-                    I18n.t('password_validation_title'),
-                    I18n.t('password_error')
-                );
-                return {markup: error};
-            }
-        } else {
-            if (params.password !== params["password-confirmation"]) {
-                var error = status.components.validationMessage(
-                    I18n.t('password_validation_title'),
-                    I18n.t('password_error1')
-                );
-                return {markup: error};
-            }
-        }
-
-    },
-    preview: function (params, context) {
-        var style = {
-            marginTop: 5,
-            marginHorizontal: 0,
-            fontSize: 14,
-            color: "black"
-        };
-
-        if (context.platform == "ios") {
-            style.fontSize = 8;
-            style.marginTop = 10;
-            style.marginBottom = 2;
-            style.letterSpacing = 1;
-        }
-
-        return {markup: status.components.text({style: style}, "●●●●●●●●●●")};
     }
 });
 

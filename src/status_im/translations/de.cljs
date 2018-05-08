@@ -116,7 +116,7 @@
    :incorrect-code                        (str "Es tut uns leid, der Code war nicht korrekt, bitte gib ihn erneut ein")
    :phew-here-is-your-passphrase          "Puh, das war anstrengend. Hier ist deine Passphrase. *Notiere sie dir und bewahre sie sicher auf!* Du wirst sie brauchen, um deinen Account wiederherzustellen."
    :here-is-your-passphrase               "Hier ist deine Passphrase. *Notiere sie dir und bewahre sie sicher auf!* Du wirst sie brauchen, um deinen Account wiederherzustellen."
-   :here-is-your-signing-phrase           "Hier ist deine Signing Phrase. Du wirst sie benutzen, um deine Trtansaktionen zu verifizieren. *Notiere sie dir und bewahre sie sicher auf!*"
+   :here-is-your-signing-phrase           "Hier ist deine Signing Phrase. Du wirst sie benutzen, um deine Transaktionen zu verifizieren. *Notiere sie dir und bewahre sie sicher auf!*"
    :phone-number-required                 "Tippe hier, um deine Telefonnummer zu validieren und ich werde deine Freunde finden."
    :shake-your-phone                      "Du hast einen Bug gefunden oder hast einen Verbesserungsvorschlag? ~Schüttle~ einfach dein Handy!"
    :intro-status                          "Chatte mit mir, um deinen Account einzurichten und deine Einstellungen zu ändern."
@@ -192,16 +192,6 @@
 
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
-
-   ;;location command
-   :your-current-location                 "Dein aktueller Standort"
-   :places-nearby                         "Standorte in der Nähe"
-   :search-results                        "Ergebnisse durchsuchen"
-   :dropped-pin                           "Pin gesetzt"
-   :location                              "Standort"
-   :open-map                              "Öffne Karte"
-   :sharing-copy-to-clipboard-address     "Adresse kopieren"
-   :sharing-copy-to-clipboard-coordinates "Koordinaten kopieren"
 
    ;;new-group
    :new-group                             "Neue Gruppe"

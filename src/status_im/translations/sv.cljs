@@ -192,16 +192,6 @@
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
 
-   ;;location command
-   :your-current-location                 "Din nuvarande plats"
-   :places-nearby                         "Närliggande platser"
-   :search-results                        "Sökresultat"
-   :dropped-pin                           "Droppade nål"
-   :location                              "Plats"
-   :open-map                              "Öppna kartan"
-   :sharing-copy-to-clipboard-address     "Kopera addressen"
-   :sharing-copy-to-clipboard-coordinates "Kopiera koordinaterna"
-
    ;;new-group
    :new-group                             "Ny grupp"
    :reorder-groups                        "Ordna grupper"
@@ -305,8 +295,6 @@
    :wallet-manage-assets                  "Hantera tillgångar"
    :signing-phrase-description            "Skriv under transaktionen genom att ange ditt lösenord. Kontrollera att orden ovan motsvarar din hemliga underskriftsfras"
    :wallet-insufficient-funds             "Otillräckligt kapital"
-   :wallet-my-token                       "Mina {{symbol}}"
-   :wallet-market-value                   "Marknadsvärde"
    :request-transaction                   "Begär transaktion"
    :send-request                          "Skicka begäran"
    :share                                 "Dela"
@@ -372,4 +360,3 @@
    :close-app-title                       "Varning!"
    :close-app-content                     "Denna app kommer att avslutas. När du öppnar den på nytt kommer det valda nätverket att användas"
    :close-app-button                      "Bekräfta"})
-

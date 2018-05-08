@@ -1,13 +1,16 @@
-from appium.webdriver.common.mobileby import By, MobileBy
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+import base64
+from io import BytesIO
+import os
+from PIL import Image, ImageChops
+from appium.webdriver.common.mobileby import MobileBy
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions
-from appium.webdriver.common.touch_action import TouchAction
-import logging
+from tests import info
 
 
 class BaseElement(object):
-
     class Locator(object):
 
         def __init__(self, by, value):
@@ -37,36 +40,78 @@ class BaseElement(object):
         return None
 
     def find_element(self):
-        logging.info('Looking for %s' % self.name)
-        return self.driver.find_element(self.locator.by, self.locator.value)
+        info('Looking for %s' % self.name)
+        try:
+            return self.driver.find_element(self.locator.by, self.locator.value)
+        except NoSuchElementException as exception:
+            exception.msg = "'%s' is not found on screen, using: '%s'" % (self.name, self.locator)
+            raise exception
 
     def find_elements(self):
-        logging.info('Looking for %s' % self.name)
+        info('Looking for %s' % self.name)
         return self.driver.find_elements(self.locator.by, self.locator.value)
 
     def wait_for_element(self, seconds=10):
-        return WebDriverWait(self.driver, seconds)\
-            .until(expected_conditions.presence_of_element_located((self.locator.by, self.locator.value)))
+        try:
+            return WebDriverWait(self.driver, seconds) \
+                .until(expected_conditions.presence_of_element_located((self.locator.by, self.locator.value)))
+        except TimeoutException as exception:
+            exception.msg = "'%s' is not found on screen, using: '%s', during '%s' seconds" % (self.name, self.locator,
+                                                                                               seconds)
+            raise exception
+
+    def wait_for_visibility_of_element(self, seconds=10):
+        try:
+            return WebDriverWait(self.driver, seconds) \
+                .until(expected_conditions.visibility_of_element_located((self.locator.by, self.locator.value)))
+        except TimeoutException as exception:
+            exception.msg = "'%s' is not found on screen, using: '%s', during '%s' seconds" % (self.name, self.locator,
+                                                                                               seconds)
+            raise exception
 
     def scroll_to_element(self):
-        action = TouchAction(self.driver)
-        for _ in range(5):
+        for _ in range(9):
             try:
                 return self.find_element()
             except NoSuchElementException:
-                logging.info('Scrolling to %s' % self.name)
-                action.press(x=0, y=1000).move_to(x=200, y=-1000).release().perform()
+                info('Scrolling down to %s' % self.name)
+                self.driver.swipe(500, 1000, 500, 500)
 
     def is_element_present(self, sec=5):
         try:
-            self.wait_for_element(sec)
-            return True
+            info('Wait for %s' % self.name)
+            return self.wait_for_element(sec)
+        except TimeoutException:
+            return False
+
+    def is_element_displayed(self, sec=5):
+        try:
+            info('Wait for %s' % self.name)
+            return self.wait_for_visibility_of_element(sec)
         except TimeoutException:
             return False
 
     @property
     def text(self):
         return self.find_element().text
+
+    @property
+    def template(self):
+        try:
+            return self.__template
+        except FileNotFoundError:
+            raise FileNotFoundError('Please add %s image as template' % self.name)
+
+    @template.setter
+    def template(self, value):
+        self.__template = Image.open(os.sep.join(__file__.split(os.sep)[:-1]) + '/elements_templates/%s' % value)
+
+    @property
+    def image(self):
+        return Image.open(BytesIO(base64.b64decode(self.find_element().screenshot_as_base64)))
+
+    def is_element_image_equals_template(self):
+        return not ImageChops.difference(self.image, self.template).getbbox()
 
 
 class BaseEditBox(BaseElement):
@@ -76,15 +121,19 @@ class BaseEditBox(BaseElement):
 
     def send_keys(self, value):
         self.find_element().send_keys(value)
-        logging.info('Type %s to %s' % (value, self.name))
+        info("Type '%s' to %s" % (value, self.name))
 
     def set_value(self, value):
         self.find_element().set_value(value)
-        logging.info('Set %s to %s' % (value, self.name))
+        info("Type '%s' to %s" % (value, self.name))
 
     def clear(self):
         self.find_element().clear()
-        logging.info('Clear text in %s' % self.name)
+        info('Clear text in %s' % self.name)
+
+    def click(self):
+        self.find_element().click()
+        info('Tap on %s' % self.name)
 
 
 class BaseText(BaseElement):
@@ -95,7 +144,7 @@ class BaseText(BaseElement):
     @property
     def text(self):
         text = self.find_element().text
-        logging.info('%s is %s' % (self.name, text))
+        info('%s is %s' % (self.name, text))
         return text
 
 
@@ -106,5 +155,17 @@ class BaseButton(BaseElement):
 
     def click(self):
         self.find_element().click()
-        logging.info('Tap on %s' % self.name)
+        info('Tap on %s' % self.name)
         return self.navigate()
+
+    def click_until_presence_of_element(self, desired_element, attempts=3):
+        counter = 0
+        while not desired_element.is_element_present(1) and counter <= attempts:
+            try:
+                info('Tap on %s' % self.name)
+                self.find_element().click()
+                info('Wait for %s' % desired_element.name)
+                desired_element.wait_for_element(5)
+                return self.navigate()
+            except (NoSuchElementException, TimeoutException):
+                counter += 1

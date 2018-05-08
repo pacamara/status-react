@@ -61,7 +61,7 @@
    :status-seen                           "Просмотрено"
    :status-delivered                      "Доставлено"
    :status-failed                         "Ошибка"
-    
+
    ;;datetime
    :datetime-ago-format                   "{{number}} {{time-intervals}} {{ago}}"
    :datetime-second                       {:one   "секунда"
@@ -191,16 +191,6 @@
 
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
-
-   ;;location command
-   :your-current-location                 "Ваше текущее местоположение"
-   :places-nearby                         "Места поблизости"
-   :search-results                        "Результаты поиска"
-   :dropped-pin                           "Выбранное местоположение"
-   :location                              "Местоположение"
-   :open-map                              "Открыть Карту"
-   :sharing-copy-to-clipboard-address     "Скопировать адрес"
-   :sharing-copy-to-clipboard-coordinates "Скопировать координаты"
 
    ;;new-group
    :new-group                             "Новая группа"

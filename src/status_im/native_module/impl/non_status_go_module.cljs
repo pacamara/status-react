@@ -24,8 +24,8 @@
     (if (not= password wrong-password)
       (callback "{\"error\":\"\"}")
       (callback "{\"error\":\"cannot retrieve a valid key for a given account: could not decrypt key with given passphrase\"}")))
-  (-complete-transactions [this hashes password callback])
-  (-discard-transaction [this id])
+  (-approve-sign-requests [this hashes password callback])
+  (-discard-sign-request [this id])
   (-parse-jail [this chat-id file callback]
     (when (= chat-id constants/console-chat-id)
       (callback "{\"result\":\"{\\\"commands\\\":{\\\"phone,50\\\":{\\\"name\\\":\\\"phone\\\",\\\"title\\\":\\\"Send Phone Number\\\",\\\"description\\\":\\\"Find friends using your number\\\",\\\"has-handler\\\":true,\\\"async-handler\\\":false,\\\"color\\\":\\\"#5bb2a2\\\",\\\"icon\\\":\\\"phone_white\\\",\\\"params\\\":[{\\\"name\\\":\\\"phone\\\",\\\"type\\\":\\\"phone\\\",\\\"placeholder\\\":\\\"Phone number\\\"}],\\\"sequential-params\\\":true,\\\"scope\\\":[\\\"personal-chats\\\",\\\"registered\\\",\\\"dapps\\\"],\\\"scope-bitmask\\\":50},\\\"faucet,50\\\":{\\\"name\\\":\\\"faucet\\\",\\\"title\\\":\\\"Faucet\\\",\\\"description\\\":\\\"Get some ETH\\\",\\\"has-handler\\\":true,\\\"async-handler\\\":false,\\\"color\\\":\\\"#7099e6\\\",\\\"params\\\":[{\\\"name\\\":\\\"url\\\",\\\"type\\\":\\\"text\\\",\\\"placeholder\\\":\\\"Faucet URL\\\"}],\\\"scope\\\":[\\\"personal-chats\\\",\\\"registered\\\",\\\"dapps\\\"],\\\"scope-bitmask\\\":50},\\\"debug,50\\\":{\\\"name\\\":\\\"debug\\\",\\\"title\\\":\\\"Debug mode\\\",\\\"description\\\":\\\"Starts\\/stops a debug mode\\\",\\\"has-handler\\\":true,\\\"async-handler\\\":false,\\\"color\\\":\\\"#7099e6\\\",\\\"params\\\":[{\\\"name\\\":\\\"mode\\\",\\\"type\\\":\\\"text\\\"}],\\\"scope\\\":[\\\"personal-chats\\\",\\\"registered\\\",\\\"dapps\\\"],\\\"scope-bitmask\\\":50}},\\\"responses\\\":{\\\"phone,50\\\":{\\\"name\\\":\\\"phone\\\",\\\"title\\\":\\\"Send Phone Number\\\",\\\"description\\\":\\\"Find friends using your number\\\",\\\"has-handler\\\":true,\\\"async-handler\\\":false,\\\"color\\\":\\\"#5bb2a2\\\",\\\"icon\\\":\\\"phone_white\\\",\\\"params\\\":[{\\\"name\\\":\\\"phone\\\",\\\"type\\\":\\\"phone\\\",\\\"placeholder\\\":\\\"Phone number\\\"}],\\\"sequential-params\\\":true,\\\"scope\\\":[\\\"personal-chats\\\",\\\"registered\\\",\\\"dapps\\\"],\\\"scope-bitmask\\\":50},\\\"confirmation-code,50\\\":{\\\"name\\\":\\\"confirmation-code\\\",\\\"description\\\":\\\"Confirmation code\\\",\\\"has-handler\\\":true,\\\"async-handler\\\":false,\\\"color\\\":\\\"#7099e6\\\",\\\"params\\\":[{\\\"name\\\":\\\"code\\\",\\\"type\\\":\\\"number\\\"}],\\\"sequential-params\\\":true,\\\"scope\\\":[\\\"personal-chats\\\",\\\"registered\\\",\\\"dapps\\\"],\\\"scope-bitmask\\\":50},\\\"password,42\\\":{\\\"name\\\":\\\"password\\\",\\\"description\\\":\\\"Password\\\",\\\"has-handler\\\":true,\\\"async-handler\\\":false,\\\"color\\\":\\\"#7099e6\\\",\\\"icon\\\":\\\"lock_white\\\",\\\"params\\\":[{\\\"name\\\":\\\"password\\\",\\\"type\\\":\\\"password\\\",\\\"placeholder\\\":\\\"Type your password\\\",\\\"hidden\\\":true},{\\\"name\\\":\\\"password-confirmation\\\",\\\"type\\\":\\\"password\\\",\\\"placeholder\\\":\\\"Confirm\\\",\\\"hidden\\\":true}],\\\"sequential-params\\\":true,\\\"scope\\\":[\\\"personal-chats\\\",\\\"anonymous\\\",\\\"dapps\\\"],\\\"scope-bitmask\\\":42},\\\"grant-permissions,58\\\":{\\\"name\\\":\\\"grant-permissions\\\",\\\"description\\\":\\\"Grant permissions\\\",\\\"has-handler\\\":true,\\\"async-handler\\\":false,\\\"color\\\":\\\"#7099e6\\\",\\\"icon\\\":\\\"lock_white\\\",\\\"params\\\":[],\\\"execute-immediately?\\\":true,\\\"scope\\\":[\\\"personal-chats\\\",\\\"anonymous\\\",\\\"registered\\\",\\\"dapps\\\"],\\\"scope-bitmask\\\":58}},\\\"functions\\\":{},\\\"subscriptions\\\":{}}\"}")))
@@ -36,16 +36,17 @@
                           :messages {},
                           :returned {:markup ["text"
                                               {:style
-                                               {:color            "black",
-                                                :fontSize         8,
-                                                :letterSpacing    1,
-                                                :marginBottom     2,
-                                                :marginHorizontal 0,
-                                                :marginTop        10}}
+                                               {:color             "black",
+                                                :font-size         8,
+                                                :letter-spacing    1,
+                                                :margin-bottom     2,
+                                                :margin-horizontal 0,
+                                                :margin-top        10}}
                                               "●●●●●●●●●●"]}}})
       :else (callback {:result nil})))
   (-call-function! [this params])
   (-call-web3 [this payload callback])
+  (-call-web3-private [this payload callback])
 
   ;; other calls
   (-move-to-internal-storage [this callback]
@@ -58,6 +59,8 @@
     (impl/module-initialized!))
   (-should-move-to-internal-storage? [this callback]
     (impl/should-move-to-internal-storage? callback))
-  (-notify [this token callback])
+  (-notify-users [this {:keys [message payload tokens] :as m} callback])
   (-add-peer [this enode callback])
-  (-close-application [this]))
+  (-close-application [this])
+  (-connection-change [this data])
+  (-app-state-change [this state]))

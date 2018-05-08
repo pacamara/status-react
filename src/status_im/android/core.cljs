@@ -9,11 +9,9 @@
             [status-im.ui.screens.views :as views]
             [status-im.ui.components.react :as react]
             [status-im.native-module.core :as status]
-            [status-im.utils.error-handler :as error-handler]
-            [status-im.utils.utils :as utils]
-            [status-im.utils.config :as config]
             [status-im.utils.notifications :as notifications]
-            [status-im.core :as core]))
+            [status-im.core :as core]
+            [status-im.utils.snoopy :as snoopy]))
 
 (defn init-back-button-handler! []
   (let [new-listener (fn []
@@ -21,11 +19,9 @@
                        ;; this listener and handle application's closing
                        ;; in handlers
                        (let [stack      (subscribe [:get :navigation-stack])
-                             creating?  (subscribe [:get :accounts/creating-account?])
                              result-box (subscribe [:get-current-chat-ui-prop :result-box])
                              webview    (subscribe [:get :webview-bridge])]
                          (cond
-                           @creating? true
 
                            (and @webview (:can-go-back? @result-box))
                            (do (.goBack @webview) true)
@@ -36,9 +32,6 @@
                            :else false)))]
     (.addEventListener react/back-handler "hardwareBackPress" new-listener)))
 
-(defn orientation->keyword [o]
-  (keyword (.toLowerCase o)))
-
 (defn app-state-change-handler [state]
   (dispatch [:app-state-change state]))
 
@@ -47,31 +40,27 @@
     (reagent/create-class
       {:component-will-mount
        (fn []
-         (let [o (orientation->keyword (.getInitialOrientation react/orientation))]
-           (dispatch [:set :orientation o]))
-         (.addOrientationListener
-          react/orientation
-          #(dispatch [:set :orientation (orientation->keyword %)]))
-         (.lockToPortrait react/orientation)
          (.addListener react/keyboard
                        "keyboardDidShow"
                        (fn [e]
                          (let [h (.. e -endCoordinates -height)]
+                           (dispatch [:hide-tab-bar])
                            (when-not (= h @keyboard-height)
                              (dispatch [:set :keyboard-height h])
                              (dispatch [:set :keyboard-max-height h])))))
          (.addListener react/keyboard
                        "keyboardDidHide"
-                       #(when-not (= 0 @keyboard-height)
-                          (dispatch [:set :keyboard-height 0])))
+                       (fn [_]
+                         (dispatch [:show-tab-bar])
+                         (when (zero? @keyboard-height)
+                           (dispatch [:set :keyboard-height 0]))))
          (.hide react/splash-screen)
          (.addEventListener react/app-state "change" app-state-change-handler))
        :component-did-mount
        (fn []
-         (when config/notifications-wip-enabled?
-           (notifications/on-refresh-fcm-token)
-           ;; TODO(oskarth): Background click_action handler
-           (notifications/on-notification)))
+         (notifications/on-refresh-fcm-token)
+         ;; TODO(oskarth): Background click_action handler
+         (notifications/on-notification))
        :component-will-unmount
        (fn []
          (.stop react/http-bridge)
@@ -82,4 +71,5 @@
 (defn init []
   (status/set-soft-input-mode status/adjust-resize)
   (init-back-button-handler!)
-  (core/init app-root))
+  (core/init app-root)
+  (snoopy/subscribe!))

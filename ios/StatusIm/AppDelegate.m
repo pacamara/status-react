@@ -18,8 +18,6 @@
 #import "TestFairy.h"
 #import "RNFIRMessaging.h"
 
-@import Instabug;
-
 @implementation AppDelegate
 
 /* Modified version of RCTDefaultLogFunction that also directs all app logs to TestFairy. */
@@ -65,10 +63,19 @@ RCTLogFunction RCTTestFairyLogFunction = ^(
   signal(SIGPIPE, SIG_IGN);
   NSURL *jsCodeLocation;
 
-  /* Enable debug logs from React Native for release mode */
-  NSString *debugLogsEnabled = [ReactNativeConfig envFor:@"DEBUG_LOGS_ENABLED"];
-  if([debugLogsEnabled isEqualToString:@"1"]){
-    RCTSetLogThreshold(RCTLogLevelInfo - 1);
+  /* Set logging level from React Native */
+  NSString *logLevel = [ReactNativeConfig envFor:@"LOG_LEVEL"];
+  if([logLevel isEqualToString:@"error"]){
+    RCTSetLogThreshold(RCTLogLevelError);
+  }
+  else if([logLevel isEqualToString:@"warn"]){
+    RCTSetLogThreshold(RCTLogLevelWarning);
+  }
+  else if([logLevel isEqualToString:@"info"]){
+    RCTSetLogThreshold(RCTLogLevelInfo);
+  }
+  else if([logLevel isEqualToString:@"debug"]){
+    RCTSetLogThreshold(RCTLogLevelTrace);
     RCTSetLogFunction(RCTTestFairyLogFunction);
   }
 
@@ -86,11 +93,6 @@ RCTLogFunction RCTTestFairyLogFunction = ^(
   self.window.rootViewController = rootViewController;
   [self.window makeKeyAndVisible];
   [SplashScreen show];
-  NSString *testfairyEnabled = [ReactNativeConfig envFor:@"TESTFAIRY_ENABLED"];
-  if([testfairyEnabled isEqualToString:@"1"]){
-    [TestFairy begin:@"969f6c921cb435cea1d41d1ea3f5b247d6026d55"];
-  }
-  [Instabug startWithToken:@"5534212f4a44f477c9ab270ab5cd2062" invocationEvent:IBGInvocationEventShake];
 
   [FIRApp configure];
   [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];

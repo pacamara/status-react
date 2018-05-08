@@ -48,13 +48,12 @@
   (module-interface/-login rns-module address password callback))
 
 
-(defn complete-transactions [hashes password callback]
-  (module-interface/-complete-transactions rns-module hashes password callback))
+(defn approve-sign-requests [hashes password callback]
+  (module-interface/-approve-sign-requests rns-module hashes password callback))
 
 
-(defn discard-transaction [id]
-  (module-interface/-discard-transaction rns-module id))
-
+(defn discard-sign-request [id]
+  (module-interface/-discard-sign-request rns-module id))
 
 (defn parse-jail [chat-id file callback]
   (module-interface/-parse-jail rns-module chat-id file callback))
@@ -78,17 +77,29 @@
 (defn call-web3 [payload callback]
   (module-interface/-call-web3 rns-module payload callback))
 
+(defn call-web3-private [payload callback]
+  (module-interface/-call-web3-private rns-module payload callback))
+
 (defn module-initialized! []
   (module-interface/-module-initialized! rns-module))
 
 (defn should-move-to-internal-storage? [callback]
   (module-interface/-should-move-to-internal-storage? rns-module callback))
 
-(defn notify [token callback]
-  (module-interface/-notify rns-module token callback))
+(defn notify-users [{:keys [message payload tokens] :as m} callback]
+  (module-interface/-notify-users rns-module m callback))
 
 (defn add-peer [enode callback]
   (module-interface/-add-peer rns-module enode callback))
 
 (defn close-application []
   (module-interface/-close-application rns-module))
+
+(defn connection-change [data]
+  (module-interface/-connection-change rns-module data))
+
+(defn app-state-change [state]
+  (module-interface/-app-state-change rns-module state))
+
+(defn get-device-UUID [callback]
+  (module-interface/-get-device-UUID rns-module callback))
