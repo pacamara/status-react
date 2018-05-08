@@ -66,7 +66,7 @@ node ('macos1') {
         hash2 = '324378dsfdsjkjekj3'
         apkUrl = 'https://i.diawi.com/' + hash2
           
-        commentMsg = "apk uploaded to diawi: " + apkUrl  
+        commentMsg = "apk uploaded to " + apkUrl  
         def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
         println("Result of github comment curl: " + ghOutput)
         sh 'sleep 10'
