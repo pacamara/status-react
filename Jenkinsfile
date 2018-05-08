@@ -66,8 +66,8 @@ node ('macos1') {
         hash2 = '324378dsfdsjkjekj3'
         apkUrl = 'https://i.diawi.com/' + hash2
           
-        def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"apk uploaded to diawi\"}' https://api.github.com/repos/status-im/status-react/issues/4/comments")
-        sh ('echo Result of github comment curl: ' + ghOutput)
+        def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"apk uploaded to diawi\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
+        println("Result of github comment curl: " + ghOutput)
         sh 'sleep 10'
           
         sh ('echo ARTIFACT Android: ' + apkUrl)
