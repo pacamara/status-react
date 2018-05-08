@@ -68,13 +68,13 @@ node ('macos1') {
 
         try {
             println("BRANCH_NAME=" + BRANCH_NAME)  
-            version = BRANCH_NAME.substring(8)
+            version = "for version " + BRANCH_NAME.substring(8)
         }
         catch (e) {
-            version = "No version info found"
+            version = "(no version info found)"
         }
 
-        commentMsg = "apk uploaded to " + apkUrl + " for version " + version 
+        commentMsg = "apk uploaded to " + apkUrl + " " + version 
         def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
         println("Result of github comment curl: " + ghOutput)
         sh 'sleep 10'
