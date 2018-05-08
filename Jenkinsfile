@@ -86,7 +86,10 @@ node ('macos1') {
             version = "(no version info found)"
         } */
 
-        commentMsg = "apk uploaded to " + apkUrl + " for branch " + BRANCH_NAME 
+        println("$pr_id=" + $pr_id)  
+        sh ('$pr_id: ' + $pr_id)
+          
+        def commentMsg = "apk uploaded to " + apkUrl + " for branch " + BRANCH_NAME 
         def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
         println("Result of github comment curl: " + ghOutput)
                   
@@ -109,7 +112,7 @@ node ('macos1') {
         def hash = sh(returnStdout: true, script: "curl -vvv 'https://upload.diawi.com/status?token="+token+"&job="+job+"'|jq -r '.hash'").trim()
         ipaUrl = 'https://i.diawi.com/' + hash
 
-        commentMsg = "ipa uploaded to " + ipaUrl + " for branch " + BRANCH_NAME
+        def commentMsg = "ipa uploaded to " + ipaUrl + " for branch " + BRANCH_NAME
         def ghOutput = sh(returnStdout: true, script: "curl -u pacamara:" + githubToken + " -H 'Content-Type: application/json'  --data '{\"body\": \"" + commentMsg + "\"}' https://api.github.com/repos/pacamara/status-react/issues/4/comments")
         println("Result of github comment curl: " + ghOutput)
 
