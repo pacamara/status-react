@@ -40,9 +40,9 @@ node ('macos1') {
       // sh 'cd ios && pod install && cd ..'
     }
 
-    stage('Tests') {
-      sh 'lein test-cljs'
-    }
+    // stage('Tests') {
+    //  sh 'lein test-cljs'
+    // }
 
     stage('Build') {
       sh 'lein prod-build'
