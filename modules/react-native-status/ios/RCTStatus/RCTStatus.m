@@ -3,7 +3,6 @@
 #import "React/RCTBridge.h"
 #import "React/RCTEventDispatcher.h"
 #import <Statusgo/Statusgo.h>
-@import Instabug;
 
 @interface NSDictionary (BVJSONString)
 -(NSString*) bv_jsonStringWithPrettyPrint:(BOOL) prettyPrint;
@@ -63,11 +62,6 @@ static RCTBridge *bridge;
 
 RCT_EXPORT_MODULE();
 
-+ (BOOL)JSCEnabled
-{
-    return @"1" == [ReactNativeConfig envFor:@"JSC_ENABLED"];
-}
-
 ////////////////////////////////////////////////////////////////////
 #pragma mark - Jails functions
 //////////////////////////////////////////////////////////////////// initJail
@@ -76,14 +70,10 @@ RCT_EXPORT_METHOD(initJail: (NSString *) js
 #if DEBUG
     NSLog(@"InitJail() method called");
 #endif
-    if([Status JSCEnabled]){
-        if(_jail == nil) {
-            _jail = [Jail new];
-        }
-        [_jail initJail:js];
-    } else {
-        InitJail((char *) [js UTF8String]);
+    if(_jail == nil) {
+        _jail = [Jail new];
     }
+    [_jail initJail:js];
     callback(@[[NSNull null]]);
 }
 
@@ -95,16 +85,11 @@ RCT_EXPORT_METHOD(parseJail:(NSString *)chatId
     NSLog(@"ParseJail() method called");
 #endif
     NSString *stringResult;
-    if([Status JSCEnabled]){
-        if(_jail == nil) {
-            _jail = [Jail new];
-        }
-        NSDictionary *result = [_jail parseJail:chatId withCode:js];
-        stringResult = [result bv_jsonStringWithPrettyPrint:NO];
-    } else {
-        char * result = Parse((char *) [chatId UTF8String], (char *) [js UTF8String]);
-        stringResult = [NSString stringWithUTF8String: result];
+    if(_jail == nil) {
+        _jail = [Jail new];
     }
+    NSDictionary *result = [_jail parseJail:chatId withCode:js];
+    stringResult = [result bv_jsonStringWithPrettyPrint:NO];
     
     callback(@[stringResult]);
 }
@@ -120,16 +105,11 @@ RCT_EXPORT_METHOD(callJail:(NSString *)chatId
     dispatch_async( dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
         NSString *stringResult;
-        if([Status JSCEnabled]){
-            if(_jail == nil) {
-                _jail = [Jail new];
-            }
-            NSDictionary *result = [_jail call:chatId path:path params:params];
-            stringResult = [result bv_jsonStringWithPrettyPrint:NO];
-        } else {
-            char * result = Call((char *) [chatId UTF8String], (char *) [path UTF8String], (char *) [params UTF8String]);
-            stringResult = [NSString stringWithUTF8String: result];
+        if(_jail == nil) {
+            _jail = [Jail new];
         }
+        NSDictionary *result = [_jail call:chatId path:path params:params];
+        stringResult = [result bv_jsonStringWithPrettyPrint:NO];
 
         dispatch_async( dispatch_get_main_queue(), ^{
             callback(@[stringResult]);
@@ -189,6 +169,7 @@ RCT_EXPORT_METHOD(startNode:(NSString *)configString) {
     NSString *upstreamURL = [configJSON valueForKeyPath:@"UpstreamConfig.URL"];
     NSString *networkDir = [rootUrl.path stringByAppendingString:dataDir];
     NSString *devCluster = [ReactNativeConfig envFor:@"ETHEREUM_DEV_CLUSTER"];
+    NSString *logLevel = [[ReactNativeConfig envFor:@"LOG_LEVEL_STATUS_GO"] uppercaseString];
     int dev = 0;
     if([devCluster isEqualToString:@"1"]){
         dev = 1;
@@ -200,19 +181,17 @@ RCT_EXPORT_METHOD(startNode:(NSString *)configString) {
     NSURL *networkDirUrl = [NSURL fileURLWithPath:networkDir];
     NSURL *logUrl = [networkDirUrl URLByAppendingPathComponent:@"geth.log"];
     [resultingConfigJson setValue:newKeystoreUrl.path forKey:@"KeyStoreDir"];
-    [resultingConfigJson setValue:[NSNumber numberWithBool:YES] forKey:@"LogEnabled"];
+    [resultingConfigJson setValue:[NSNumber numberWithBool:[logLevel length] != 0] forKey:@"LogEnabled"];
     [resultingConfigJson setValue:logUrl.path forKey:@"LogFile"];
-    [resultingConfigJson setValue:@"DEBUG" forKey:@"LogLevel"];
+    [resultingConfigJson setValue:([logLevel length] == 0 ? [NSString stringWithUTF8String: "ERROR"] : logLevel) forKey:@"LogLevel"];
     
+    [resultingConfigJson setValue:[NSNumber numberWithBool:YES] forKeyPath:@"WhisperConfig.LightClient"];
     if(upstreamURL != nil) {
         [resultingConfigJson setValue:[NSNumber numberWithBool:YES] forKeyPath:@"UpstreamConfig.Enabled"];
         [resultingConfigJson setValue:upstreamURL forKeyPath:@"UpstreamConfig.URL"];
     }
     NSString *resultingConfig = [resultingConfigJson bv_jsonStringWithPrettyPrint:NO];
     NSLog(@"node config %@", resultingConfig);
-    if([fileManager fileExistsAtPath:logUrl.path]) {
-        [fileManager removeItemAtPath:logUrl.path error:nil];
-    }
     
     if(![fileManager fileExistsAtPath:networkDirUrl.path]) {
         [fileManager createDirectoryAtPath:networkDirUrl.path withIntermediateDirectories:YES attributes:nil error:nil];
@@ -224,9 +203,7 @@ RCT_EXPORT_METHOD(startNode:(NSString *)configString) {
         [dict setObject:[NSNumber numberWithInt:511] forKey:NSFilePosixPermissions];
         [fileManager createFileAtPath:logUrl.path contents:nil attributes:dict];
     }
-#ifndef DEBUG
-    [Instabug addFileAttachmentWithURL:logUrl];
-#endif
+
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
                    ^(void)
                    {
@@ -278,14 +255,16 @@ RCT_EXPORT_METHOD(createAccount:(NSString *)password
 }
 
 ////////////////////////////////////////////////////////////////////
-#pragma mark - Notify method
-//////////////////////////////////////////////////////////////////// notify
-RCT_EXPORT_METHOD(notify:(NSString *)token
+#pragma mark - NotifyUsers method
+//////////////////////////////////////////////////////////////////// notifyUsers
+RCT_EXPORT_METHOD(notifyUsers:(NSString *)message
+                  payloadJSON:(NSString *)payloadJSON
+                  tokensJSON:(NSString *)tokensJSON
                   callback:(RCTResponseSenderBlock)callback) {
-    char * result = Notify((char *) [token UTF8String]);
+    char * result = NotifyUsers((char *) [message UTF8String], (char *) [payloadJSON UTF8String], (char *) [tokensJSON UTF8String]);
     callback(@[[NSString stringWithUTF8String: result]]);
 #if DEBUG
-    NSLog(@"Notify() method called");
+    NSLog(@"NotifyUsers() method called");
 #endif
 }
 
@@ -325,26 +304,26 @@ RCT_EXPORT_METHOD(login:(NSString *)address
 }
 
 ////////////////////////////////////////////////////////////////////
-#pragma mark - Complete Transactions
-//////////////////////////////////////////////////////////////////// completeTransactions
-RCT_EXPORT_METHOD(completeTransactions:(NSString *)hashes
+#pragma mark - Approve Sign Requests
+//////////////////////////////////////////////////////////////////// approveSignRequests
+RCT_EXPORT_METHOD(approveSignRequests:(NSString *)hashes
                   password:(NSString *)password
                   callback:(RCTResponseSenderBlock)callback) {
 #if DEBUG
-    NSLog(@"CompleteTransactions() method called");
+    NSLog(@"ApproveSignRequests() method called");
 #endif
-    char * result = CompleteTransactions((char *) [hashes UTF8String], (char *) [password UTF8String]);
+    char * result = ApproveSignRequests((char *) [hashes UTF8String], (char *) [password UTF8String]);
     callback(@[[NSString stringWithUTF8String: result]]);
 }
 
 ////////////////////////////////////////////////////////////////////
-#pragma mark - Discard Transaction
-//////////////////////////////////////////////////////////////////// discardTransaction
-RCT_EXPORT_METHOD(discardTransaction:(NSString *)id) {
+#pragma mark - Discard Sign Request
+//////////////////////////////////////////////////////////////////// discardSignRequest
+RCT_EXPORT_METHOD(discardSignRequest:(NSString *)id) {
 #if DEBUG
-    NSLog(@"DiscardTransaction() method called");
+    NSLog(@"DiscardSignRequest() method called");
 #endif
-    DiscardTransaction((char *) [id UTF8String]);
+    DiscardSignRequest((char *) [id UTF8String]);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -398,8 +377,43 @@ RCT_EXPORT_METHOD(sendWeb3Request:(NSString *)payload
     });
 }
 
+RCT_EXPORT_METHOD(sendWeb3PrivateRequest:(NSString *)payload
+                  callback:(RCTResponseSenderBlock)callback) {
+    dispatch_async( dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        char * result = CallPrivateRPC((char *) [payload UTF8String]);
+        dispatch_async( dispatch_get_main_queue(), ^{
+            callback(@[[NSString stringWithUTF8String: result]]);
+        });
+    });
+}
+
 RCT_EXPORT_METHOD(closeApplication) {
     exit(0);
+}
+
+
+RCT_EXPORT_METHOD(connectionChange:(NSString *)type
+                       isExpensive:(BOOL)isExpensive) {
+#if DEBUG
+    NSLog(@"ConnectionChange() method called");
+#endif
+    ConnectionChange((char *) [type UTF8String], isExpensive? 1 : 0);
+}
+
+RCT_EXPORT_METHOD(appStateChange:(NSString *)type) {
+#if DEBUG
+    NSLog(@"AppStateChange() method called");
+#endif
+    AppStateChange((char *) [type UTF8String]);
+}
+
+RCT_EXPORT_METHOD(getDeviceUUID:(RCTResponseSenderBlock)callback) {
+#if DEBUG
+    NSLog(@"getDeviceUUID() method called");
+#endif
+    NSString* Identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    
+    callback(@[Identifier]);
 }
 
 + (void)signalEvent:(const char *) signal

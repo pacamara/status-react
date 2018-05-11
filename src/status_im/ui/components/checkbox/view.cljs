@@ -1,13 +1,17 @@
 (ns status-im.ui.components.checkbox.view
-  (:require [reagent.core :as reagent]
-            [status-im.ui.components.checkbox.styles :as styles]
-            [status-im.ui.components.react :as react]))
+  (:require [status-im.ui.components.checkbox.styles :as styles]
+            [status-im.ui.components.react :as react]
+            [status-im.utils.platform :as platform]))
 
-;; TODO(jeluard) Migrate to native checkbox provided by RN 0.49
-;; https://facebook.github.io/react-native/docs/checkbox.html
-
-(defn checkbox [{:keys [on-value-change checked?]}]
-  [react/touchable-highlight {:style styles/wrapper :on-press #(do (when on-value-change (on-value-change (not checked?))))}
-   [react/view (styles/icon-check-container checked?)
-    (when checked?
-      [react/icon :check_on styles/check-icon])]])
+(defn checkbox [{:keys [on-value-change checked? accessibility-label] :or {accessibility-label :checkbox}}]
+  (if platform/android?
+    [react/view {:style styles/wrapper}
+     [react/check-box {:on-value-change     on-value-change
+                       :value               checked?
+                       :accessibility-label accessibility-label}]]
+    [react/touchable-highlight (merge {:style               styles/wrapper
+                                       :accessibility-label accessibility-label}
+                                      (when on-value-change {:on-press #(on-value-change (not checked?))}))
+     [react/view (styles/icon-check-container checked?)
+      (when checked?
+        [react/icon :check_on styles/check-icon])]]))

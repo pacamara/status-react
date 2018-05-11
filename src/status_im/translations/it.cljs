@@ -1,8 +1,7 @@
 (ns status-im.translations.it)
 
 (def translations
-  {
-   ;;common
+  {;;common
    :members-title                         "Membri"
    :not-implemented                       "!non implementato"
    :chat-name                             "Nome della chat"
@@ -191,16 +190,6 @@
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
 
-   ;;location command
-   :your-current-location                 "La tua posizione corrente"
-   :places-nearby                         "Posti vicini"
-   :search-results                        "Cerca risultati"
-   :dropped-pin                           "Pin posizionato"
-   :location                              "Posizione"
-   :open-map                              "Apri Mappa"
-   :sharing-copy-to-clipboard-address     "Copia l'Indirizzo"
-   :sharing-copy-to-clipboard-coordinates "Copia coordinate"
-
    ;;new-group
    :new-group                             "Nuovo gruppo"
    :reorder-groups                        "Riordina gruppi"
@@ -338,8 +327,6 @@
    :wallet-browse-photos                  "Sfoglia Foto"
    :validation-amount-invalid-number      "La Quantità è un numero invalido"
    :validation-amount-is-too-precise      "L'ammontare è troppo preciso. La più piccola unità che puoi inviare è 1 Wei (1x10^-18 ETH)"
-
-
 
    ;; network settings
    :new-network                           "Nuova rete"

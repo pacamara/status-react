@@ -1,19 +1,18 @@
 (ns status-im.native-module.impl.module
   (:require-macros
-   [cljs.core.async.macros :as async :refer [go-loop go]])
+   [cljs.core.async.macros :refer [go-loop go]])
   (:require [status-im.ui.components.react :as r]
-            [re-frame.core :refer [dispatch]]
+            [re-frame.core :refer [dispatch] :as re-frame]
             [taoensso.timbre :as log]
-            [cljs.core.async :as async :refer [<! timeout]]
+            [cljs.core.async :as async :refer [<!]]
             [status-im.utils.js-resources :as js-res]
             [status-im.utils.platform :as p]
-            [status-im.utils.scheduler :as scheduler]
             [status-im.utils.types :as types]
             [status-im.utils.transducers :as transducers]
-            [status-im.utils.async :as async-util]
+            [status-im.utils.async :as async-util :refer [timeout]]
             [status-im.react-native.js-dependencies :as rn-dependencies]
             [status-im.native-module.module :as module]
-            [status-im.utils.config :as config]))
+            [clojure.string :as string]))
 
 ;; if StatusModule is not initialized better to store
 ;; calls and make them only when StatusModule is ready
@@ -55,16 +54,14 @@
 (defn init-jail []
   (when status
     (call-module
-      (fn []
-        (let [init-js     (str js-res/status-js "I18n.locale = '" rn-dependencies/i18n.locale "'; ")
-              init-js'    (if config/jsc-enabled?
-                            (str init-js js-res/web3)
-                            init-js)
-              log-message (str (if config/jsc-enabled?
-                                 "JavaScriptCore"
-                                 "OttoVM")
-                               " jail initialized")]
-          (.initJail status init-js' #(log/debug log-message)))))))
+     (fn []
+       (let [init-js (string/join [js-res/status-js
+                                   "I18n.locale = '"
+                                   rn-dependencies/i18n.locale
+                                   "'; "
+                                   js-res/web3])]
+         (.initJail status init-js #(do (re-frame/dispatch [:initialize-keychain])
+                                        (log/debug "JavaScriptCore jail initialized"))))))))
 
 (defonce listener-initialized (atom false))
 
@@ -104,9 +101,9 @@
                    true)
                  false))))))
 
-(defn notify [token on-result]
+(defn notify-users [{:keys [message payload tokens] :as m} on-result]
   (when status
-    (call-module #(.notify status token on-result))))
+    (call-module #(.notifyUsers status message payload tokens on-result))))
 
 (defn add-peer [enode on-result]
   (when status
@@ -120,21 +117,27 @@
   (when status
     (call-module #(.login status address password on-result))))
 
-(defn complete-transactions
+(defn approve-sign-requests
   [hashes password callback]
-  (log/debug :complete-transactions (boolean status) hashes)
+  (log/debug :approve-sign-requests (boolean status) hashes)
   (when status
-    (call-module #(.completeTransactions status (types/clj->json hashes) password callback))))
+    (call-module #(.approveSignRequests status (types/clj->json hashes) password callback))))
 
-(defn discard-transaction
+(defn discard-sign-request
   [id]
-  (log/debug :discard-transaction id)
+  (log/debug :discard-sign-request id)
   (when status
-    (call-module #(.discardTransaction status id))))
+    (call-module #(.discardSignRequest status id))))
+
+(defn- append-catalog-init [js]
+  (str js "\n" "var catalog = JSON.stringify(_status_catalog); catalog;"))
 
 (defn parse-jail [bot-id file callback]
   (when status
-    (call-module #(.parseJail status bot-id file callback))))
+    (call-module #(.parseJail status
+                              bot-id
+                              (append-catalog-init file)
+                              callback))))
 
 (defn execute-call [{:keys [jail-id path params callback]}]
   (when status
@@ -150,11 +153,9 @@
               cb      (fn [jail-result]
                         (let [result (-> jail-result
                                          types/json->clj
-                                         (assoc :bot-id jail-id))
-                              result' (if config/jsc-enabled?
-                                        (update result :result types/json->clj)
-                                        result)]
-                          (callback result')))]
+                                         (assoc :bot-id jail-id)
+                                         (update :result types/json->clj))]
+                          (callback result)))]
           (.callJail status jail-id (types/clj->json path) (types/clj->json params') cb))))))
 
 ;; We want the mainting (time) windowed queue of all calls to the jail
@@ -209,7 +210,7 @@
      {:jail-id  chat-id
       :path     path
       :params   params
-      :callback (or callback #(dispatch [:received-bot-response {:chat-id chat-id} %]))})))
+      :callback (or callback #(dispatch [:chat-received-message/bot-response {:chat-id chat-id} %]))})))
 
 (defn set-soft-input-mode [mode]
   (when status
@@ -224,8 +225,25 @@
   (when status
     (call-module #(.sendWeb3Request status payload callback))))
 
+(defn call-web3-private [payload callback]
+  (when status
+    (call-module #(.sendWeb3PrivateRequest status payload callback))))
+
 (defn close-application []
   (.closeApplication status))
+
+(defn connection-change [{:keys [type expensive?]}]
+  (.connectionChange status type expensive?))
+
+(defn app-state-change [state]
+  (.appStateChange status state))
+
+(defn get-device-UUID [callback]
+  (call-module
+   #(.getDeviceUUID
+     status
+     (fn [UUID]
+       (callback (string/upper-case UUID))))))
 
 (defrecord ReactNativeStatus []
   module/IReactNativeStatus
@@ -242,10 +260,10 @@
     (recover-account passphrase password callback))
   (-login [this address password callback]
     (login address password callback))
-  (-complete-transactions [this hashes password callback]
-    (complete-transactions hashes password callback))
-  (-discard-transaction [this id]
-    (discard-transaction id))
+  (-approve-sign-requests [this hashes password callback]
+    (approve-sign-requests hashes password callback))
+  (-discard-sign-request [this id]
+    (discard-sign-request id))
   (-parse-jail [this chat-id file callback]
     (parse-jail chat-id file callback))
   (-call-jail [this params]
@@ -254,8 +272,10 @@
     (call-function! params))
   (-call-web3 [this payload callback]
     (call-web3 payload callback))
-  (-notify [this token callback]
-    (notify token callback))
+  (-call-web3-private [this payload callback]
+    (call-web3-private payload callback))
+  (-notify-users [this {:keys [message payload tokens] :as m} callback]
+    (notify-users m callback))
   (-add-peer [this enode callback]
     (add-peer enode callback))
 
@@ -271,4 +291,10 @@
   (-should-move-to-internal-storage? [this callback]
     (should-move-to-internal-storage? callback))
   (-close-application [this]
-    (close-application)))
+    (close-application))
+  (-connection-change [this data]
+    (connection-change data))
+  (-app-state-change [this state]
+    (app-state-change state))
+  (-get-device-UUID [this callback]
+    (get-device-UUID callback)))

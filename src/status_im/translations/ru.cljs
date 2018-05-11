@@ -1,8 +1,7 @@
 (ns status-im.translations.ru)
 
 (def translations
-  {
-   ;;common
+  {;;common
    :members-title                         "Участники"
    :not-implemented                       "!не реализовано"
    :chat-name                             "Имя чата"
@@ -61,7 +60,7 @@
    :status-seen                           "Просмотрено"
    :status-delivered                      "Доставлено"
    :status-failed                         "Ошибка"
-    
+
    ;;datetime
    :datetime-ago-format                   "{{number}} {{time-intervals}} {{ago}}"
    :datetime-second                       {:one   "секунда"
@@ -191,16 +190,6 @@
 
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
-
-   ;;location command
-   :your-current-location                 "Ваше текущее местоположение"
-   :places-nearby                         "Места поблизости"
-   :search-results                        "Результаты поиска"
-   :dropped-pin                           "Выбранное местоположение"
-   :location                              "Местоположение"
-   :open-map                              "Открыть Карту"
-   :sharing-copy-to-clipboard-address     "Скопировать адрес"
-   :sharing-copy-to-clipboard-coordinates "Скопировать координаты"
 
    ;;new-group
    :new-group                             "Новая группа"
@@ -338,8 +327,6 @@
    :wallet-browse-photos                  "Просмотреть Фотографии"
    :validation-amount-invalid-number      "Сумма недействительна"
    :validation-amount-is-too-precise      "Слишком много чисел после запятой. Наименьшая сумма, которую вы можете отправить это 1 Wei (1x10^-18 ETH)"
-
-
 
    ;; network settings
    :new-network                           "Новая сеть"

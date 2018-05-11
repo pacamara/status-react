@@ -1,8 +1,7 @@
 (ns status-im.translations.zh-hant-hk)
 
 (def translations
-  {
-   ;;common
+  {;;common
    :members-title                         "成員"
    :not-implemented                       "!未實現"
    :chat-name                             "聊天名稱"
@@ -192,16 +191,6 @@
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
 
-   ;;location command
-   :your-current-location                 "你的當前位置"
-   :places-nearby                         "附近的位置"
-   :search-results                        "查詢結果"
-   :dropped-pin                           "放置的標記"
-   :location                              "位置"
-   :open-map                              "打開地圖"
-   :sharing-copy-to-clipboard-address     "複製地址"
-   :sharing-copy-to-clipboard-coordinates "複製座標"
-
    ;;new-group
    :new-group                             "新增羣組"
    :reorder-groups                        "重新排序羣組"
@@ -339,8 +328,6 @@
    :wallet-browse-photos                  "瀏覽相冊"
    :validation-amount-invalid-number      "金額不是一個有效的數字"
    :validation-amount-is-too-precise      "金額過於精確，所能發送的最小單位是1 Wei (1x10^-18 ETH)"
-
-
 
    ;; network settings
    :new-network                           "新建網絡"

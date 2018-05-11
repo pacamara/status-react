@@ -1,20 +1,25 @@
 (ns status-im.utils.ethereum.core
   (:require [clojure.string :as string]
             [status-im.js-dependencies :as dependencies]
-            [status-im.utils.money :as money]))
+            [status-im.utils.ethereum.tokens :as tokens]
+            [status-im.utils.money :as money]
+            [taoensso.timbre :as log]))
 
 ;; IDs standardized in https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md#list-of-chain-ids
 
 (def chains
   {:mainnet {:id 1 :name "Mainnet"}
-   :ropsten {:id 3 :name "Ropsten"}
+   :testnet {:id 3 :name "Ropsten"}
    :rinkeby {:id 4 :name "Rinkeby"}})
 
-(defn chain-id [k]
+(defn chain-id->chain-keyword [i]
+  (some #(when (= i (:id (val %))) (key %)) chains))
+
+(defn chain-keyword->chain-id [k]
   (get-in chains [k :id]))
 
 (defn testnet? [id]
-  (contains? #{(chain-id :ropsten) (chain-id :rinkeby)} id))
+  (contains? #{(chain-keyword->chain-id :testnet) (chain-keyword->chain-id :rinkeby)} id))
 
 (defn network-with-upstream-rpc? [networks network]
   (get-in networks [network :raw-config :UpstreamConfig :Enabled]))
@@ -27,7 +32,11 @@
       address
       (str hex-prefix address))))
 
-(defn network->chain-id [network]
+(defn address? [s]
+  (when s
+    (.isAddress dependencies/Web3.prototype s)))
+
+(defn network->chain-keyword [network]
   (when network
     (keyword (string/replace network "_rpc" ""))))
 
@@ -47,7 +56,7 @@
   (.toHex dependencies/Web3.prototype i))
 
 (defn hex->bignumber [s]
-  (money/bignumber (if (= s "0x") 0 s)))
+  (money/bignumber (if (= s hex-prefix) 0 s)))
 
 (defn zero-pad-64 [s]
   (str (apply str (drop (count s) (repeat 64 "0"))) s))
@@ -70,3 +79,48 @@
 (defn call-params [contract method-sig & params]
   (let [data (apply format-call-params (sig->method-id method-sig) params)]
     {:to contract :data data}))
+
+(defn send-transaction [web3 params cb]
+  (.sendTransaction (.-eth web3) (clj->js params) cb))
+
+(def default-transaction-gas (money/bignumber 21000))
+
+(defn gas-price [web3 cb]
+  (.getGasPrice (.-eth web3) cb))
+
+(defn estimate-gas-web3 [web3 obj cb]
+  (.estimateGas (.-eth web3) obj cb))
+
+(defn estimate-gas [symbol]
+  (if (tokens/ethereum? symbol)
+    default-transaction-gas
+    ;; TODO(jeluard) Rely on estimateGas call
+    (.times default-transaction-gas 5)))
+
+(defn handle-error [error]
+  (log/info (.stringify js/JSON error)))
+
+(defn get-block-number [web3 cb]
+  (.getBlockNumber (.-eth web3)
+                   (fn [error result]
+                     (if (seq error)
+                       (handle-error error)
+                       (cb result)))))
+
+(defn get-block-info [web3 number cb]
+  (.getBlock (.-eth web3) number (fn [error result]
+                                   (if (seq error)
+                                     (handle-error error)
+                                     (cb (js->clj result :keywordize-keys true))))))
+
+(defn get-transaction [web3 number cb]
+  (.getTransaction (.-eth web3) number (fn [error result]
+                                         (if (seq error)
+                                           (handle-error error)
+                                           (cb (js->clj result :keywordize-keys true))))))
+
+(defn get-transaction-receipt [web3 number cb]
+  (.getTransactionReceipt (.-eth web3) number (fn [error result]
+                                                (if (seq error)
+                                                  (handle-error error)
+                                                  (cb (js->clj result :keywordize-keys true))))))

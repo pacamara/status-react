@@ -8,50 +8,44 @@
             status-im.data-store.core
             [status-im.ui.screens.views :as views]
             [status-im.ui.components.react :as react]
-            [status-im.native-module.core :as status]
-            [status-im.utils.error-handler :as error-handler]
-            [status-im.utils.utils :as utils]
-            [status-im.utils.config :as config]
             [status-im.utils.notifications :as notifications]
-            [status-im.core :as core]))
+            [status-im.core :as core]
+            [status-im.utils.instabug :as instabug]
+            [status-im.utils.snoopy :as snoopy]))
 
-(defn orientation->keyword [o]
-  (keyword (.toLowerCase o)))
+(defn app-state-change-handler [state]
+  (dispatch [:app-state-change state]))
 
 (defn app-root []
   (let [keyboard-height (subscribe [:get :keyboard-height])]
     (reagent/create-class
-      {:component-will-mount
-       (fn []
-         (let [o (orientation->keyword (.getInitialOrientation react/orientation))]
-           (dispatch [:set :orientation o]))
-         (.addOrientationListener
-          react/orientation
-          #(dispatch [:set :orientation (orientation->keyword %)]))
-         (.lockToPortrait react/orientation)
-         (.addListener react/keyboard
-                       "keyboardWillShow"
-                       (fn [e]
-                         (let [h (.. e -endCoordinates -height)]
-                           (when-not (= h @keyboard-height)
-                             (dispatch [:set :keyboard-height h])
-                             (dispatch [:set :keyboard-max-height h])))))
-         (.addListener react/keyboard
-                       "keyboardWillHide"
-                       #(when-not (= 0 @keyboard-height)
-                          (dispatch [:set :keyboard-height 0])))
-         (.hide react/splash-screen))
-       :component-did-mount
-       (fn []
-         (when config/notifications-wip-enabled?
-           (notifications/request-permissions)
-           (notifications/on-refresh-fcm-token)
-           (notifications/on-notification)))
-       :component-will-unmount
-       (fn []
-         (.stop react/http-bridge))
-       :display-name "root"
-       :reagent-render views/main})))
+     {:component-will-mount
+      (fn []
+        (.addListener react/keyboard
+                      "keyboardWillShow"
+                      (fn [e]
+                        (let [h (.. e -endCoordinates -height)]
+                          (when-not (= h @keyboard-height)
+                            (dispatch [:set :keyboard-height h])
+                            (dispatch [:set :keyboard-max-height h])))))
+        (.addListener react/keyboard
+                      "keyboardWillHide"
+                      #(when-not (= 0 @keyboard-height)
+                         (dispatch [:set :keyboard-height 0])))
+        (.hide react/splash-screen)
+        (.addEventListener react/app-state "change" app-state-change-handler))
+      :component-did-mount
+      (fn []
+        (notifications/on-refresh-fcm-token)
+        (notifications/on-notification))
+      :component-will-unmount
+      (fn []
+        (.stop react/http-bridge)
+        (.removeEventListener react/app-state "change" app-state-change-handler))
+      :display-name "root"
+      :reagent-render views/main})))
 
 (defn init []
-  (core/init app-root))
+  (core/init app-root)
+  (snoopy/subscribe!)
+  (instabug/init))

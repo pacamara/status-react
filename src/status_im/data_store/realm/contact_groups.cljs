@@ -1,16 +1,11 @@
 (ns status-im.data-store.realm.contact-groups
-  (:require [status-im.data-store.realm.core :as realm]
-    [status-im.utils.random :refer [timestamp]])
+  (:require [goog.object :as object]
+            [status-im.data-store.realm.core :as realm])
   (:refer-clojure :exclude [exists?]))
-
-(defn get-all
-  []
-  (-> @realm/account-realm
-      (realm/get-all :contact-group)))
 
 (defn get-all-as-list
   []
-  (realm/js-object->clj (get-all)))
+  (realm/all-clj (realm/get-all @realm/account-realm :contact-group) :contact-group))
 
 (defn save
   [group update?]
@@ -21,33 +16,30 @@
   (realm/write @realm/account-realm
                (fn []
                  (-> @realm/account-realm
-                     (realm/get-one-by-field :contact-group :group-id group-id)
+                     (realm/get-by-field :contact-group :group-id group-id)
+                     realm/single
                      (aset (name property-name) value)))))
 
 (defn exists?
   [group-id]
-  (realm/exists? @realm/account-realm :contact-group {:group-id group-id}))
+  (realm/exists? @realm/account-realm :contact-group :group-id group-id))
 
 (defn delete
   [group-id]
-  (when-let [group (realm/get-one-by-field @realm/account-realm :contact-group :group-id group-id)]
-    (realm/delete @realm/account-realm group)))
+  (when-let [group (-> @realm/account-realm
+                       (realm/get-by-field :contact-group :group-id group-id)
+                       realm/single)]
+    (realm/write @realm/account-realm #(realm/delete @realm/account-realm group))))
 
-(defn get-contacts
+(defn- get-by-id-obj
   [group-id]
-  (-> @realm/account-realm
-      (realm/get-one-by-field :contact-group :group-id group-id)
-      (aget "contacts")))
-
-(defn- save-contacts
-  [identities contacts]
-  (doseq [contact-identity identities]
-    (when-not (.find contacts (fn [object _ _]
-                                (= contact-identity (aget object "identity"))))
-      (.push contacts (clj->js {:identity contact-identity})))))
+  (realm/single (realm/get-by-field @realm/account-realm :contact-group :group-id group-id)))
 
 (defn add-contacts
   [group-id identities]
-  (let [contacts (get-contacts group-id)]
+  (let [group    (get-by-id-obj group-id)
+        contacts (object/get group "contacts")]
     (realm/write @realm/account-realm
-                 #(save-contacts identities contacts))))
+                 #(aset group "contacts"
+                        (clj->js (into #{} (concat identities
+                                                   (realm/list->clj contacts))))))))

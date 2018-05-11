@@ -15,17 +15,11 @@
 
 (def console-js (slurp-bot :console "web3_metadata.js"))
 
-(def browse-js (slurp-bot :browse))
-
-(def mailman-js (slurp-bot :mailman))
-
 (def demo-bot-js (slurp-bot :demo_bot))
 
 (def resources
   {:transactor-bot transactor-js
    :console-bot    console-js
-   :browse-bot     browse-js
-   :mailman-bot    mailman-js
    :demo-bot       demo-bot-js})
 
 (defn get-resource [url]
@@ -37,14 +31,16 @@
 
 (def webview-js (slurp "resources/js/webview.js"))
 (def jquery (str
-              " if (typeof jQuery2 == 'undefined') {"
-              (slurp "resources/js/vendors/jquery-3.1.1.min.js")
-              "}"))
+             " if (typeof jQuery2 == 'undefined') {"
+             (slurp "resources/js/vendors/jquery-3.1.1.min.js")
+             "}"))
 (def web3 (str "; if (typeof Web3 == 'undefined') {"
                (slurp "node_modules/web3/dist/web3.min.js")
                "}"))
-(defn web3-init [provider-address]
+(defn web3-init [provider-address current-account-address network-id]
   (str "var providerAddress = \"" provider-address "\";"
+       "var currentAccountAddress = \"" current-account-address "\";"
+       "var networkId = \"" network-id "\";"
        (slurp "resources/js/web3_init.js")))
 
 (defn local-storage-data [data]

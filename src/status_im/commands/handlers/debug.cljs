@@ -2,8 +2,8 @@
   (:require [re-frame.core :as re-frame]
             [status-im.ui.components.react :as react]
             [status-im.commands.events.loading :as loading-events]
-            [status-im.data-store.accounts :as accounts]
             [status-im.data-store.messages :as messages]
+            [status-im.data-store.accounts :as accounts]
             [status-im.utils.handlers :as handlers]
             [status-im.utils.platform :as platform]
             [status-im.utils.types :as types]
@@ -34,7 +34,6 @@
               (catch js/Error e
                 (log/debug "Error: " e))))))
 
-
 ;;;; Specific debug methods
 ;; TODO: there are still a lot of dispatch calls here. we can remove or restructure most of them,
 ;; but to do this we need to also rewrite a lot of already existing functions
@@ -48,15 +47,14 @@
             (get-in contacts [whisper-identity :debug?]))
       (let [dapp (merge dapp-data {:dapp?  true
                                    :debug? true})]
-        (re-frame/dispatch [:upsert-chat! {:chat-id whisper-identity
+        (re-frame/dispatch [:update-chat! {:chat-id whisper-identity
                                            :name    name
                                            :debug?  true}])
         (if (get contacts whisper-identity)
           (do (re-frame/dispatch [:update-contact! dapp])
               (respond {:type :ok
                         :text "The DApp or bot has been updated."}))
-          (do (re-frame/dispatch [:add-contacts [dapp]])
-              (re-frame/dispatch [:open-chat-with-contact dapp])
+          (do (re-frame/dispatch [:open-chat-with-contact dapp])
               (respond {:type :ok
                         :text "The DApp or bot has been added."}))))
       (respond {:type :error
@@ -69,14 +67,14 @@
   [{:keys [chats]} {:keys [whisper-identity]}]
   (if (get chats whisper-identity)
     (if (get-in chats [whisper-identity :debug?])
-      (do (re-frame/dispatch [:remove-chat whisper-identity])
+      (do (re-frame/dispatch [:remove-chat-and-navigate-home whisper-identity])
           (respond {:type :ok
                     :text "The DApp or bot has been removed."}))
       (respond {:type :error
                 :text "Your DApp or bot should be debuggable."}))
     (respond {:type :error
               :text "There is no such DApp or bot."}))
-  (re-frame/dispatch [:remove-contact whisper-identity #(and (:dapp? %) (:debug? %))]))
+  (re-frame/dispatch [:remove-contact whisper-identity]))
 
 (defn contact-changed
   [{:keys          [webview-bridge current-chat-id]
@@ -92,8 +90,8 @@
             :text "Command has been executed."}))
 
 (defn switch-node
-  [{:accounts/keys [current-account-id]} {:keys [url]}]
-  (re-frame/dispatch [:initialize-protocol current-account-id url])
+  [{:keys [account/account]} {:keys [url]}]
+  (re-frame/dispatch [:initialize-protocol (:address account) url])
   (respond {:type :ok
             :text "You've successfully switched the node."}))
 
@@ -115,7 +113,6 @@
                 :data log})
       (respond {:type :error
                 :text "No log messages found."}))))
-
 
 ;;;; FX
 
@@ -154,7 +151,6 @@
        (respond {:type :error :text (str "Error: " e)})
        (log/debug "Error: " e)))))
 
-
 ;;;; Handlers
 
 (handlers/register-handler-fx
@@ -176,8 +172,7 @@
 
 ;; TODO(janherich) once `contact-changed` fn is refactored, get rid of this unnecessary event
 (handlers/register-handler-fx
-  ::load-commands
-  [re-frame/trim-v (re-frame/inject-cofx :get-local-storage-data)]
-  (fn [cofx [contact]]
-    (loading-events/load-commands cofx {} contact)))
-
+ ::load-commands
+ [re-frame/trim-v (re-frame/inject-cofx :data-store/get-local-storage-data)]
+ (fn [cofx [contact]]
+   (loading-events/load-commands-for-bot cofx {} contact)))

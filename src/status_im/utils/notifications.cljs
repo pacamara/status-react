@@ -1,5 +1,6 @@
 (ns status-im.utils.notifications
-  (:require [re-frame.core :as re-frame :refer [dispatch reg-fx]]
+  (:require [goog.object :as object]
+            [re-frame.core :as re-frame :refer [dispatch reg-fx]]
             [status-im.utils.handlers :as handlers]
             [status-im.react-native.js-dependencies :as rn]
             [status-im.utils.config :as config]
@@ -15,16 +16,30 @@
  (fn [db [_ fcm-token]]
    (assoc-in db [:notifications :fcm-token] fcm-token)))
 
+(handlers/register-handler-fx
+ :request-notifications-granted
+ (fn [_ _]))
+
+(handlers/register-handler-fx
+ :request-notifications-denied
+ (fn [_ _]))
+
 ;; NOTE: Only need to explicitly request permissions on iOS.
 (defn request-permissions []
-  (.requestPermissions (.-default rn/react-native-fcm)))
+  (-> (.requestPermissions (.-default rn/react-native-fcm))
+      (.then
+       (fn [_]
+         (log/debug "notifications-granted")
+         (dispatch [:request-notifications-granted {}]))
+       (fn [_]
+         (log/debug "notifications-denied")
+         (dispatch [:request-notifications-denied {}])))))
 
 (defn get-fcm-token []
-    (-> (.getFCMToken (aget rn/react-native-fcm "default"))
-        (.then (fn [x]
-                 (when config/notifications-wip-enabled?
-                   (log/debug "get-fcm-token: " x)
-                   (dispatch [:update-fcm-token x]))))))
+  (-> (.getFCMToken (object/get rn/react-native-fcm "default"))
+      (.then (fn [x]
+               (log/debug "get-fcm-token: " x)
+               (dispatch [:update-fcm-token x])))))
 
 (defn on-refresh-fcm-token []
   (.on (.-default rn/react-native-fcm)

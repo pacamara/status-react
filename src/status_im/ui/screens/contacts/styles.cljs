@@ -1,7 +1,6 @@
 (ns status-im.ui.screens.contacts.styles
   (:require-macros [status-im.utils.styles :refer [defnstyle defstyle]])
-  (:require [status-im.ui.components.styles :as common]
-            [status-im.ui.components.tabs.styles :as tabs-st]))
+  (:require [status-im.ui.components.styles :as common]))
 
 (def toolbar-actions
   {:flex-direction :row})
@@ -38,12 +37,12 @@
    :opacity     0.6})
 
 (defstyle show-all
-  {:flexDirection   :row
-   :alignItems      :center
-   :backgroundColor common/color-white
-   :padding-left    72
-   :android         {:height       56}
-   :ios             {:height       64}})
+  {:flex-direction   :row
+   :align-items      :center
+   :background-color common/color-white
+   :padding-left     72
+   :android          {:height 56}
+   :ios              {:height 64}})
 
 (defstyle show-all-text
   {:android {:font-size      14
@@ -61,14 +60,14 @@
 
 (def group-icon
   (assoc option-inner-image
-    :tint-color common/color-gray))
+         :tint-color common/color-gray))
 
 ; New contact
 
 (def contact-form-container
-  {:flex            1
-   :color           :white
-   :backgroundColor :white})
+  {:flex             1
+   :color            :white
+   :background-color :white})
 
 (def gradient-background
   {:position :absolute
@@ -83,24 +82,14 @@
    :height      72})
 
 (def address-explication-container
-  {:flex         1
-   :margin-top   30
-   :paddingLeft  16
-   :paddingRight 16})
+  {:flex          1
+   :margin-top    30
+   :padding-left  16
+   :padding-right 16})
 
 (def address-explication
-  {:textAlign :center
-   :color     common/color-gray})
+  {:text-align :center
+   :color      common/color-gray})
 
 (def qr-input
   {:margin-right 42})
-
-(def search-container
-  {:flex             1
-   :background-color common/color-white})
-
-(def search-empty-view
-  {:flex             1
-   :background-color common/color-white
-   :align-items      :center
-   :justify-content  :center})

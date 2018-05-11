@@ -1,8 +1,7 @@
 (ns status-im.translations.fr)
 
 (def translations
-  {
-   ;;common
+  {;;common
    :members-title                         "Membres"
    :not-implemented                       "! Non disponible"
    :chat-name                             "Pseudonyme"
@@ -13,6 +12,8 @@
    :next                                  "Suivant"
    :open                                  "Ouvrir"
    :description                           "Description"
+   :enter-url                             "Entrer l'URL"
+   :open-dapp                             "Ouvrir une ÐApp"
    :url                                   "URL"
    :type-a-message                        "Saisissez un message..."
    :type-a-command                        "Saisissez une commande..."
@@ -27,7 +28,8 @@
 
    ;;drawer
    :switch-users                          "Changer d'utilisateur"
-   :current-network                       "Le réseau actuel"
+   :current-network                       "Réseau actuel"
+   :logout                                "Déconnexion"
 
    ;;chat
    :is-typing                             "écrit..."
@@ -62,8 +64,8 @@
    :status-delivered                      "Délivré"
    :status-failed                         "Échec"
 
-   ;datetime
-   :datetime-ago-format                   "{{number}} {{time-intervals}} {{ago}}"
+   ;;datetime
+   :datetime-ago-format                   "{{ago}} {{number}} {{time-intervals}}"
    :datetime-second                       {:one   "seconde"
                                            :other "secondes"}
    :datetime-minute                       {:one   "minute"
@@ -78,12 +80,15 @@
 
    ;;profile
    :profile                               "Profil"
+   :view-profile                          "Voir profil"
    :edit-profile                          "Modifier profil"
+   :main-currency                         "Devise principale"
    :message                               "Message"
    :not-specified                         "Non spécifié"
    :public-key                            "Clé publique"
    :phone-number                          "Numéro de téléphone"
    :update-status                         "Actualisez votre statut..."
+   :share-contact-code                    "Partager mon code contact"
    :add-a-status                          "Ajoutez un statut..."
    :status-prompt                         "Créez un nouveau statut pour partager vos intérêts avec tout le monde. Vous pouvez aussi utiliser les #hashtags."
    :add-to-contacts                       "Ajouter aux contacts"
@@ -131,8 +136,14 @@
    :phone-significant                     "Significatif"
 
    ;;chats
+   :new                                   "Nouveau"
+   :new-chat                              "Nouveau chat"
+   :start-new-chat                        "Démarrer un chat"
+   :start-group-chat                      "Démarrer un groupe"
+   :invite-friends                        "Inviter des amis"
    :chats                                 "Chats"
    :delete-chat                           "Supprimer chat"
+   :group-chat                            "Groupe"
    :new-group-chat                        "Nouveau chat de groupe"
    :new-public-group-chat                 "Rejoindre chat public"
    :edit-chats                            "Modifier chats"
@@ -185,22 +196,13 @@
    :clear-history                         "Effacer l'historique"
    :mute-notifications                    "Couper le son des notifications"
    :leave-chat                            "Quitter le chat"
+   :leave-group-chat                      "Quitter le groupe"
    :chat-settings                         "Paramètres de chat"
    :edit                                  "Modifier"
    :add-members                           "Ajouter des membres"
 
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
-
-   ;;location command
-   :your-current-location                 "Votre localisation actuelle"
-   :places-nearby                         "Endroits proches"
-   :search-results                        "Résultats de recherche"
-   :dropped-pin                           "Repère placé"
-   :location                              "Localisation"
-   :open-map                              "Ouvrir la carte"
-   :sharing-copy-to-clipboard-address     "Copier l'adresse"
-   :sharing-copy-to-clipboard-coordinates "Copier les coordonnées"
 
    ;;new-group
    :new-group                             "Nouveau groupe"
@@ -259,7 +261,7 @@
    :confirm                               "Confirmer"
    :transaction                           "Transaction"
    :unsigned-transaction-expired          "La transaction non signée a expiré"
-   :status                                "Statut"
+   :status                                "Status"
    :recipient                             "Destinataire"
    :to                                    "à"
    :from                                  "de"
@@ -297,9 +299,14 @@
    :wallet-add-asset                      "Ajouter un actif"
    :wallet-total-value                    "Valeur totale"
    :wallet-settings                       "Paramètres du portefeuille"
+   :wallet-manage-assets                  "Gérer les actifs"
    :signing-phrase-description            "Signez la transaction en saisissant votre mot de passe. Assurez-vous que les mots ci-dessus correspondent à votre phrase de signature secrète"
    :wallet-insufficient-funds             "Fonds insuffisants"
    :request-transaction                   "Effectuer une transaction"
+   :receive-transaction                   "Recevoir une transaction"
+   :new-transaction                       "Nouvelle Transaction"
+   :transaction-history                   "Historique des transactions"
+
    :send-request                          "Envoyer la requête"
    :share                                 "Partager"
    :eth                                   "ETH"
@@ -340,26 +347,32 @@
    :validation-amount-invalid-number      "Le montant n'est pas un nombre valide"
    :validation-amount-is-too-precise      "Le montant est trop précis. La plus petite unité que vous pouvez saisir est 1 Wei (1x10^-18 ETH)"
 
-
-
    ;; network settings
    :new-network                           "Nouveau réseau"
    :add-network                           "Ajouter un réseau"
    :add-new-network                       "Ajouter un nouveau réseau"
    :existing-networks                     "Réseaux existants"
+   :existing-wnodes                       "Serveurs de mail existants"
    :add-json-file                         "Ajouter un fichier JSON"
-   :paste-json-as-text                    "Coller JSON en texte"
-   :paste-json                            "Coller JSON"
+   :paste-json-as-text                    "Coller un JSON comme texte"
+   :paste-json                            "Coller un JSON"
    :specify-rpc-url                       "Préciser une URL RPC"
    :edit-network-config                   "Modifier la configuration réseau"
    :connected                             "Connecté"
    :process-json                          "Interpréter le JSON"
    :error-processing-json                 "Erreur survenue lors de l'interprétation du JSON"
    :rpc-url                               "URL RPC"
+   :network                               "Réseau"
    :remove-network                        "Supprimer le réseau"
+   :offline-messaging-settings            "Configuration de la messagerie hors-ligne"
    :network-settings                      "Paramètres réseau"
    :edit-network-warning                  "Soyez prudent, la modification des données réseau pourrait rendre ce réseau inutilisable pour vous"
    :connecting-requires-login             "Il faut s'identifier pour se connecter à un nouveau réseau"
    :close-app-title                       "Avertissement!"
    :close-app-content                     "L'application va s'arrêter et se fermer. Lors de la prochaine ouverture, le réseau sélectionné sera utilisé"
-   :close-app-button                      "Confirmer"})
+   :close-app-button                      "Confirmer"
+
+   ;; browser
+   :browser                               "Navigateur"
+   :enter-dapp-url                        "Entrer l'URL d'une ÐApp"
+   :selected-dapps                        "ÐApps sélectionnées"})

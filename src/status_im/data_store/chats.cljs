@@ -1,93 +1,67 @@
 (ns status-im.data-store.chats
-  (:require [status-im.data-store.realm.chats :as data-store])
-  (:refer-clojure :exclude [exists?]))
+  (:require [goog.object :as object]
+            [cljs.core.async :as async]
+            [re-frame.core :as re-frame]
+            [status-im.data-store.realm.core :as core]))
 
-(defn- normalize-contacts
-  [item]
-  (update item :contacts vals))
+(defn- normalize-chat [{:keys [chat-id] :as chat}]
+  (let [last-clock-value (-> (core/get-by-field @core/account-realm
+                                                :message :chat-id chat-id)
+                             (core/sorted :clock-value :desc)
+                             (core/single-clj :message)
+                             :clock-value)]
+    (assoc chat :last-clock-value (or last-clock-value 0))))
 
-(defn get-all
-  []
-  (map normalize-contacts (data-store/get-all-active)))
+(re-frame/reg-cofx
+ :data-store/all-chats
+ (fn [cofx _]
+   (assoc cofx :all-stored-chats (map normalize-chat
+                                      (-> @core/account-realm
+                                          (core/get-all :chat)
+                                          (core/sorted :timestamp :desc)
+                                          (core/all-clj :chat))))))
 
-(defn get-by-id
-  [id]
-  (data-store/get-by-id id))
+(defn save-chat-tx
+  "Returns tx function for saving chat"
+  [{:keys [chat-id] :as chat}]
+  (fn [realm]
+    (core/create realm :chat chat (core/exists? realm :chat :chat-id chat-id))))
 
-(defn exists?
+;; Only used in debug mode
+(defn delete-chat-tx
+  "Returns tx function for hard deleting the chat"
   [chat-id]
-  (data-store/exists? chat-id))
+  (fn [realm]
+    (core/delete realm (core/get-by-field realm :chat :chat chat-id))))
 
-(defn save
-  [{:keys [last-message-id chat-id] :as chat}] 
-  (data-store/save chat (data-store/exists? chat-id)))
+(defn- get-chat-by-id [chat-id realm]
+  (core/single (core/get-by-field realm :chat :chat-id chat-id)))
 
-(defn delete
-  [chat-id]
-  (data-store/delete chat-id))
+(defn deactivate-chat-tx
+  "Returns tx function for deactivating chat"
+  [chat-id now]
+  (fn [realm]
+    (let [chat (get-chat-by-id chat-id realm)]
+      (doto chat
+        (aset "is-active" false)
+        (aset "removed-at" now)))))
 
-(defn set-inactive
-  [chat-id]
-  (data-store/set-inactive chat-id))
+(defn add-chat-contacts-tx
+  "Returns tx function for adding chat contacts"
+  [chat-id contacts]
+  (fn [realm]
+    (let [chat              (get-chat-by-id chat-id realm)
+          existing-contacts (object/get chat "contacts")]
+      (aset chat "contacts"
+            (clj->js (into #{} (concat contacts
+                                       (core/list->clj existing-contacts))))))))
 
-(defn get-contacts
-  [chat-id]
-  (data-store/get-contacts chat-id))
-
-(defn has-contact?
-  [chat-id identity]
-  (data-store/has-contact? chat-id identity))
-
-(defn add-contacts
-  [chat-id identities]
-  (data-store/add-contacts chat-id identities))
-
-(defn remove-contacts
-  [chat-id identities]
-  (data-store/remove-contacts chat-id identities))
-
-(defn save-property
-  [chat-id property-name value]
-  (data-store/save-property chat-id property-name value))
-
-(defn get-property
-  [chat-id property-name]
-  (data-store/get-property chat-id property-name))
-
-(defn is-active?
-  [chat-id]
-  (get-property chat-id :is-active))
-
-(defn removed-at
-  [chat-id]
-  (get-property chat-id :removed-at))
-
-(defn get-message-overhead
-  [chat-id]
-  (get-property chat-id :message-overhead))
-
-(defn get-active-group-chats
-  []
-  (data-store/get-active-group-chats))
-
-(defn set-active
-  [chat-id active?]
-  (save-property chat-id :is-active active?))
-
-(defn inc-message-overhead
-  [chat-id]
-  (save-property chat-id :message-overhead (inc (get-message-overhead chat-id))))
-
-(defn reset-message-overhead
-  [chat-id]
-  (save-property chat-id :message-overhead 0))
-
-(defn new-update?
-  [timestamp chat-id]
-  (let
-    [{:keys [added-to-at removed-at removed-from-at added-at]}
-     (get-by-id chat-id)]
-    (and (> timestamp added-to-at)
-         (> timestamp removed-at)
-         (> timestamp removed-from-at)
-         (> timestamp added-at))))
+(defn remove-chat-contacts-tx
+  "Returns tx function for removing chat contacts"
+  [chat-id contacts]
+  (fn [realm]
+    (let [chat              (get-chat-by-id chat-id realm)
+          existing-contacts (object/get chat "contacts")]
+      (aset chat "contacts"
+            (clj->js (remove (into #{} contacts)
+                             (core/list->clj existing-contacts)))))))

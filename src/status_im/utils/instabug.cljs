@@ -1,6 +1,22 @@
 (ns status-im.utils.instabug
   (:require [taoensso.timbre :as log]
+            [status-im.utils.config :as config]
             [status-im.react-native.js-dependencies :as rn-dependencies]))
+
+(def instabug rn-dependencies/instabug)
+
+(defn- prepare-event-name [event {:keys [target]}]
+  (str event " " target))
+
+;; `event` is an event name, e.g. "Tap"
+;; `properties` is a map of event details or nil, e.g. {:target :send-current-message}
+;; (see status-im.utils.mixpanel-events for list of trackable events)
+(defn track [event properties]
+  (when (= event "Tap")
+    (let [event-name (prepare-event-name event properties)]
+      (try
+        (.logUserEventWithName instabug event-name)
+        (catch :default _ nil)))))
 
 (defn log [str]
   (if js/goog.DEBUG
@@ -20,3 +36,9 @@
 
 (when-not js/goog.DEBUG
   (log/merge-config! {:appenders {:instabug (instabug-appender)}}))
+
+(defn init []
+  (.startWithToken rn-dependencies/instabug
+                   config/instabug-token
+                   (.. rn-dependencies/instabug -invocationEvent -shake))
+  (.setIntroMessageEnabled rn-dependencies/instabug false))

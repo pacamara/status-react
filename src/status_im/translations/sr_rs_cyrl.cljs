@@ -1,8 +1,7 @@
 (ns status-im.translations.sr-rs-cyrl)
 
 (def translations
-  {
-   ;;common
+  {;;common
    :members-title                         "Чланови"
    :not-implemented                       "!није имплементирано"
    :chat-name                             "Назив разговора"
@@ -192,16 +191,6 @@
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
 
-   ;;location command
-   :your-current-location                 "Ваша тренутна локација"
-   :places-nearby                         "Места у близини"
-   :search-results                        "Претражи резултате"
-   :dropped-pin                           "Баци иглу"
-   :location                              "Локација"
-   :open-map                              "Отвори мапу"
-   :sharing-copy-to-clipboard-address     "Копирај адресу"
-   :sharing-copy-to-clipboard-coordinates "Копирај координате"
-
    ;;new-group
    :new-group                             "Нова група"
    :reorder-groups                        "Промени распоред група"
@@ -339,8 +328,6 @@
    :wallet-browse-photos                  "Претражи слике"
    :validation-amount-invalid-number      "Износ није исправан број"
    :validation-amount-is-too-precise      "Износ има превише децимала. Најмања јединица коју можете послати је 1 Wei (1x10^-18 ETH)"
-
-
 
    ;; network settings
    :new-network                           "Нова мрежа"

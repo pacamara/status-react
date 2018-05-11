@@ -1,8 +1,7 @@
 (ns status-im.translations.lt)
 
 (def translations
-  {
-   ;;common
+  {;;common
    :members-title                         "Nariams"
    :not-implemented                       "neįgyvendinta"
    :chat-name                             "Pokalbio pavadinimas"
@@ -192,16 +191,6 @@
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
 
-   ;;location command
-   :your-current-location                 "Jūsų dabartinė vieta"
-   :places-nearby                         "Netolimos vietos"
-   :search-results                        "Paieškos rezultatai"
-   :dropped-pin                           "Lokacijos žymeklis"
-   :location                              "Lokacija"
-   :open-map                              "Atverti žemėlapį"
-   :sharing-copy-to-clipboard-address     "Kopijuoti adresą"
-   :sharing-copy-to-clipboard-coordinates "Kopijuoti koordinates"
-
    ;;new-group
    :new-group                             "Nauja grupė"
    :reorder-groups                        "Rūšiuoti grupes"
@@ -340,8 +329,6 @@
    :wallet-browse-photos                  "Naršyti žinutes"
    :validation-amount-invalid-number      "Kiekio skaičius netinkamas"
    :validation-amount-is-too-precise      "Suma yra per daug tiksli. Mažiausias vienetas, kurį galite siųsti, yra 1 Wei (1x10^-18 ETH)"
-
-
 
    ;; network settings
    :new-network                           "Naujas tinklas"

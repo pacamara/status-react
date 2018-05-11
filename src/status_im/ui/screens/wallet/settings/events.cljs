@@ -9,12 +9,9 @@
     (disj ids id)))
 
 (handlers/register-handler-fx
-  :wallet.settings/toggle-visible-token
-  (fn [{{:keys [network] :accounts/keys [current-account-id] :as db} :db} [_ symbol checked?]]
-    (let [chain-id     (ethereum/network->chain-id network)
-          path         [:accounts/accounts current-account-id :settings]
-          settings     (get-in db path)
-          new-settings (update-in settings [:wallet :visible-tokens chain-id] #(toggle-checked % symbol checked?))]
-      (-> db
-          (assoc-in path new-settings)
-          (accounts/update-wallet-settings new-settings)))))
+ :wallet.settings/toggle-visible-token
+ (fn [{{:keys [network account/account] :as db} :db :as cofx} [_ symbol checked?]]
+   (let [chain        (ethereum/network->chain-keyword network)
+         settings     (get account :settings)
+         new-settings (update-in settings [:wallet :visible-tokens chain] #(toggle-checked % symbol checked?))]
+     (accounts/update-settings new-settings cofx))))

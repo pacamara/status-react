@@ -1,18 +1,17 @@
 (ns status-im.translations.sl)
 
 (def translations
-  {
-   ;common
+  {;;common
    :members-title                         "Člani"
    :not-implemented                       "!ni implementirano"
    :chat-name                             "Ime za klepet"
    :notifications-title                   "Obvestila in zvoki"
    :offline                               "Nedosegljiv/-a"
 
-   ;drawer
+   ;;drawer
    :switch-users                          "Preklopi med uporabniki"
 
-   ;chat
+   ;;chat
    :is-typing                             "piše"
    :and-you                               "in ti"
    :search-chat                           "Iskanje po klepetu"
@@ -29,11 +28,11 @@
    :suggestions-requests                  "Prošnje"
    :suggestions-commands                  "Ukazi"
 
-   ;sync
+   ;;sync
    :sync-in-progress                      "Sinhronizacija..."
    :sync-synced                           "Sinhronizirano"
 
-   ;messages
+   ;;messages
    :status-sending                        "Pošiljanje"
    :status-pending                        "V teku"
    :status-sent                           "Poslano"
@@ -42,7 +41,7 @@
    :status-delivered                      "Dostavljeno"
    :status-failed                         "Ni uspelo"
 
-   ;datetime
+   ;;datetime
    :datetime-second                       {:one   "sekunda"
                                            :other "sekund"}
    :datetime-minute                       {:one   "minuta"
@@ -55,7 +54,7 @@
    :datetime-yesterday                    "včeraj"
    :datetime-today                        "danes"
 
-   ;profile
+   ;;profile
    :profile                               "Profil"
    :message                               "Sporočilo"
    :not-specified                         "Ni navedeno"
@@ -68,7 +67,7 @@
    :image-source-make-photo               "Zajemi"
    :image-source-gallery                  "Izberi iz galerije"
 
-   ;sign-up
+   ;;sign-up
    :contacts-syncronized                  "Tvoji stiki so bili sinhronizirani"
    :confirmation-code                     (str "Hvala! Poslali smo ti sporočilo s potrditveno "
                                                "kodo. Prosimo, vnesi to kodo in potrdi svojo telefonsko številko")
@@ -80,11 +79,11 @@
    :intro-message1                        "Dobrodošel/-la v status\nPritisni to sporočilo in nastavi svoje geslo ter začni!"
    :account-generation-message            "Počakaj sekundo, opraviti moram noro računico, da ustvarim tvoj račun!"
 
-   ;chats
+   ;;chats
    :chats                                 "Klepeti"
    :new-group-chat                        "Nov skupinski klepet"
 
-   ;discover
+   ;;discover
    :discover                              "Odkrivanje"
    :none                                  "Brez"
    :search-tags                           "Sem vnesi svoje priljubljene oznake"
@@ -92,17 +91,17 @@
    :recent                                "Nedavno"
    :no-statuses-discovered                "Ni odkritih statusov"
 
-   ;settings
+   ;;settings
    :settings                              "Nastavitve"
 
-   ;contacts
+   ;;contacts
    :contacts                              "Stiki"
    :new-contact                           "Nov stik"
    :contacts-group-new-chat               "Začni nov klepet"
    :no-contacts                           "Zaenkrat še ni stikov"
    :show-qr                               "Prikaži QR"
 
-   ;group-settings
+   ;;group-settings
    :remove                                "Odstrani"
    :save                                  "Shrani"
    :clear-history                         "Počisti zgodovino"
@@ -110,14 +109,14 @@
    :edit                                  "Uredi"
    :add-members                           "Dodaj člane"
 
-   ;commands
+   ;;commands
    :chat-send-eth                         "{{amount}} ETH"
 
-   ;new-group
+   ;;new-group
 
-   ;participants
+   ;;participants
 
-   ;protocol
+   ;;protocol
    :received-invitation                   "je prejel/-a povabilo za klepet"
    :removed-from-chat                     "te je odstranil/-a iz skupinskega klepeta"
    :left                                  "preostane"
@@ -125,7 +124,7 @@
    :removed                               "odstranil/-a"
    :You                                   "Ti"
 
-   ;new-contact
+   ;;new-contact
    :add-new-contact                       "Dodaj nov stik"
    :scan-qr                               "Skeniraj QR"
    :name                                  "Ime"
@@ -134,32 +133,31 @@
    :can-not-add-yourself                  "Sebe ni mogoče dodati"
    :unknown-address                       "Neznan naslov"
 
-
-   ;login
+   ;;login
    :connect                               "Poveži"
    :address                               "Naslov"
    :password                              "Geslo"
    :wrong-password                        "Napačno geslo"
 
-   ;recover
+   ;;recover
    :passphrase                            "Šifrirno geslo"
    :recover                               "Povrni"
 
-   ;accounts
+   ;;accounts
    :recover-access                        "Povrni dostop"
 
-   ;wallet-qr-code
+   ;;wallet-qr-code
    :done                                  "Končano"
    :main-wallet                           "Glavna denarnica"
 
-   ;validation
+   ;;validation
    :invalid-phone                         "Neveljavna telefonska številka"
    :amount                                "Vsota"
-   ;transactions
+   ;;transactions
    :status                                "Status"
    :recipient                             "Prejemnik"
 
-   ;:webview
+   ;;:webview
    :web-view-error                        "ups, napaka"
 
    :confirm                               "Potrdi"
@@ -204,8 +202,6 @@
    :send-transaction                      "Pošlji transakcijo"
    :delete-contact                        "Izbriši stik"
    :mute-notifications                    "Utišaj obvestila"
-
-
    :contact-s                             {:one   "stik"
                                            :other "stiki"}
    :next                                  "Naprej"
@@ -227,8 +223,6 @@
    :browsing-open-in-web-browser          "Odpri v spletnem brskalniku"
    :delete-group-prompt                   "To ne bo vplivalo na stike"
    :edit-profile                          "Uredi profil"
-
-
    :empty-topic                           "Prazna tema"
    :to                                    "Za"
    :data                                  "Podatki"})

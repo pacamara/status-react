@@ -53,7 +53,7 @@
   (str from ": " text ", "))
 
 (defn format-thread [thread]
-    (apply str (map format-message thread)))
+  (apply str (map format-message thread)))
 
 ;; Invariant we want to maintain.
 (defn ordered-increasing-text? [thread]
@@ -86,6 +86,11 @@
                        {:from "a", :text "2", :clock-value 2}
                        {:from "a", :text "5", :clock-value 8})]
       (is (not (ordered-increasing-text? bad-thread))))))
+
+(deftest safe-timestamp
+  (testing "it caps the timestamp when a value too large is provided"
+    (is (< (clocks/receive js/Number.MAX_SAFE_INTEGER 0)
+           js/Number.MAX_SAFE_INTEGER))))
 
   ;; Debugging
 ;;(println "******************************************")

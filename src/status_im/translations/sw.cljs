@@ -1,18 +1,17 @@
 (ns status-im.translations.sw)
 
 (def translations
-  {
-   ;common
+  {;;common
    :members-title                         "Wanachama"
    :not-implemented                       "!haijatekelezwa"
    :chat-name                             "Jina la gumzo"
    :notifications-title                   "Notisi na sauti"
    :offline                               "Nje ya mtandao"
 
-   ;drawer
+   ;;drawer
    :switch-users                          "Badili kwa watumiaji"
 
-   ;chat
+   ;;chat
    :is-typing                             "anaandika"
    :and-you                               "na wewe"
    :search-chat                           "Tafuta gumzo"
@@ -29,11 +28,11 @@
    :suggestions-requests                  "Maombi"
    :suggestions-commands                  "Amri"
 
-   ;sync
+   ;;sync
    :sync-in-progress                      "Kulandanisha..."
    :sync-synced                           "Katika ulandanishaji"
 
-   ;messages
+   ;;messages
    :status-sending                        "Kutuma"
    :status-pending                        "Inasubiri"
    :status-sent                           "Tuma"
@@ -42,7 +41,7 @@
    :status-delivered                      "Imefikishwa"
    :status-failed                         "Imeshindwa"
 
-   ;datetime
+   ;;datetime
    :datetime-second                       {:one   "sekunde"
                                            :other "sekunde"}
    :datetime-minute                       {:one   "dakika"
@@ -55,7 +54,7 @@
    :datetime-yesterday                    "jana"
    :datetime-today                        "leo"
 
-   ;profile
+   ;;profile
    :profile                               "Profaili"
    :message                               "Ujumbe"
    :not-specified                         "Haijafafanuliwa"
@@ -73,7 +72,7 @@
    :sharing-share                         "Dela..."
    :sharing-cancel                        "Ghairi"
 
-   ;sign-up
+   ;;sign-up
    :contacts-syncronized                  "Mawasiliano yako yamelandanishwa"
    :confirmation-code                     (str "Asante! Tumekutumia ujumbe mfupi na uthibitisho "
                                                "kificho. Tafadhali peana hicho kificho kuthibitisha namba yako ya simu")
@@ -85,11 +84,11 @@
    :intro-message1                        "Karibu kwa Hali na Ubofye ujumbe huu ili kuweka nenosiri lako na uanze!"
    :account-generation-message            "Nipe sekunde, naenda kufanya baadhi ya hisabati kutengeneza akaunti yako!"
 
-   ;chats
+   ;;chats
    :chats                                 "Gumzo"
    :new-group-chat                        "Gumzo mpya ya kikundi"
 
-   ;discover
+   ;;discover
    :discover                             "Ugunduzi"
    :none                                  "Hakuna"
    :search-tags                           "Andika vitambulisho vyako vya kutafuta hapa"
@@ -97,17 +96,17 @@
    :recent                                "Hivi karibuni"
    :no-statuses-discovered                "Hakuna hali zimegundulika"
 
-   ;settings
+   ;;settings
    :settings                              "Mipangilio"
 
-   ;contacts
+   ;;contacts
    :contacts                              "Mawasiliano"
    :new-contact                           "Mawasiliano mapya"
    :contacts-group-new-chat               "Anza gumzo mpya"
    :no-contacts                           "Bado hakuna mawasiliano"
    :show-qr                               "Onyesha QR"
 
-   ;group-settings
+   ;;group-settings
    :remove                                "Ondoa"
    :save                                  "Hifadhi"
    :clear-history                         "Futa historia"
@@ -115,14 +114,14 @@
    :edit                                  "Hariri"
    :add-members                           "Ongeza wanachama"
 
-   ;commands
+   ;;commands
    :chat-send-eth                         "{{amount}} ETH"
 
-   ;new-group
+   ;;new-group
 
-   ;participants
+   ;;participants
 
-   ;protocol
+   ;;protocol
    :received-invitation                   "mwaliko wa gumzo ulipokelewa"
    :removed-from-chat                     "uliondolewa kwenye kikundi cha gumzo"
    :left                                  "uliondoka"
@@ -130,7 +129,7 @@
    :removed                               "uliondolewa"
    :You                                   "Wewe"
 
-   ;new-contact
+   ;;new-contact
    :add-new-contact                       "Ongeza mawasiliano mapya"
    :scan-qr                               "Piga picha QR"
    :name                                  "Jina"
@@ -139,30 +138,29 @@
    :can-not-add-yourself                  "Huwezi kujiongeza mwenyewe"
    :unknown-address                       "Anwani Haijulikani"
 
-
-   ;login
+   ;;login
    :connect                               "Unganisha"
    :address                               "Anwani"
    :password                              "Nenosiri"
    :wrong-password                        "Nenosiri sio halali"
 
-   ;recover
+   ;;recover
    :passphrase                            "Kaulisiri"
    :recover                               "Okoa"
 
-   ;accounts
+   ;;accounts
    :recover-access                        "Okoa ufikiaji/Upatikanaji"
 
-   ;wallet-qr-code
+   ;;wallet-qr-code
    :done                                  "Imefanyika"
    :main-wallet                           "Mkoba Mkuu"
 
-   ;validation
+   ;;validation
    :invalid-phone                         "Namba ya simu ni batili"
    :amount                                "Kiasi"
-   ;transactions
+   ;;transactions
    :status                                "Hali"
    :recipient                             "Mpokeaji"
 
-   ;:webview
+   ;;:webview
    :web-view-error                        "nadhani, hitilafu"})

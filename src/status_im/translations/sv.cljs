@@ -1,8 +1,7 @@
 (ns status-im.translations.sv)
 
 (def translations
-  {
-   ;;common
+  {;;common
    :members-title                         "Medlemmar"
    :not-implemented                       "!inte implementerad"
    :chat-name                             "Chattnamn"
@@ -192,16 +191,6 @@
    ;;commands
    :chat-send-eth                         "{{amount}} ETH"
 
-   ;;location command
-   :your-current-location                 "Din nuvarande plats"
-   :places-nearby                         "Närliggande platser"
-   :search-results                        "Sökresultat"
-   :dropped-pin                           "Droppade nål"
-   :location                              "Plats"
-   :open-map                              "Öppna kartan"
-   :sharing-copy-to-clipboard-address     "Kopera addressen"
-   :sharing-copy-to-clipboard-coordinates "Kopiera koordinaterna"
-
    ;;new-group
    :new-group                             "Ny grupp"
    :reorder-groups                        "Ordna grupper"
@@ -305,8 +294,6 @@
    :wallet-manage-assets                  "Hantera tillgångar"
    :signing-phrase-description            "Skriv under transaktionen genom att ange ditt lösenord. Kontrollera att orden ovan motsvarar din hemliga underskriftsfras"
    :wallet-insufficient-funds             "Otillräckligt kapital"
-   :wallet-my-token                       "Mina {{symbol}}"
-   :wallet-market-value                   "Marknadsvärde"
    :request-transaction                   "Begär transaktion"
    :send-request                          "Skicka begäran"
    :share                                 "Dela"
@@ -349,8 +336,6 @@
    :validation-amount-invalid-number      "Beloppet är inte ett giltigt tal"
    :validation-amount-is-too-precise      "Summan är för precis Den minsta summan du kan skicka är 1 Wei (1x10^-18 ETH)"
 
-
-
    ;; network settings
    :new-network                           "Nytt nätverk"
    :add-network                           "Lägg till nätverk"
@@ -372,4 +357,3 @@
    :close-app-title                       "Varning!"
    :close-app-content                     "Denna app kommer att avslutas. När du öppnar den på nytt kommer det valda nätverket att användas"
    :close-app-button                      "Bekräfta"})
-

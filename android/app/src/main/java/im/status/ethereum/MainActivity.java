@@ -1,31 +1,47 @@
 package im.status.ethereum;
 
 import android.content.Context;
+import android.annotation.TargetApi;
+import android.support.annotation.Nullable;
 import android.app.AlertDialog;
 import android.app.ActivityManager;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Looper;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.provider.Settings;
 import android.os.Bundle;
 
 import com.facebook.react.ReactActivity;
+import com.facebook.react.modules.core.PermissionListener;
 import org.devio.rn.splashscreen.SplashScreen;
 import com.testfairy.TestFairy;
+import com.instabug.library.Instabug;
 
 import java.util.Properties;
+import im.status.ethereum.module.StatusThreadPoolExecutor;
 
-public class MainActivity extends ReactActivity {
+public class MainActivity extends ReactActivity
+        implements ActivityCompat.OnRequestPermissionsResultCallback{
+
+    private static final int PERMISSION_REQUEST_CAMERA = 0;
+
+    @Nullable private PermissionListener mPermissionListener;
 
     private static void registerUncaughtExceptionHandler(final Context context) {
         final Thread.UncaughtExceptionHandler defaultUncaughtExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(final Thread thread, final Throwable t) {
+                // High priority, so don't use StatusThreadPoolExecutor
                 new Thread() {
                     @Override
                     public void run() {
@@ -65,8 +81,29 @@ public class MainActivity extends ReactActivity {
         properties.setProperty("https.nonProxyHosts", "localhost|127.0.0.1");
     }
 
+    private Intent createNotificationSettingsIntent() {
+        final Intent intent = new Intent();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+        } else {
+            intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.addCategory(Intent.CATEGORY_DEFAULT);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+        }
+        return intent;
+    }
+
+    @Override
+    public void onNewIntent(final Intent intent) {
+        if (intent.getDataString() != null && intent.getData().getScheme().startsWith("app-settings")) {
+          startActivity(createNotificationSettingsIntent());
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         // Make sure we get an Alert for every uncaught exceptions
         registerUncaughtExceptionHandler(MainActivity.this);
 
@@ -78,6 +115,7 @@ public class MainActivity extends ReactActivity {
         SplashScreen.show(this);
         super.onCreate(savedInstanceState);
 
+        Instabug.setIntroMessageEnabled(false);
         if(BuildConfig.TESTFAIRY_ENABLED == "1") {
             TestFairy.begin(this, "969f6c921cb435cea1d41d1ea3f5b247d6026d55");
         }
@@ -114,14 +152,14 @@ public class MainActivity extends ReactActivity {
             dialog.show();
         }
 
-        Thread thread = new Thread() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
                 System.loadLibrary("status-logs");
             }
         };
 
-        thread.start();
+        StatusThreadPoolExecutor.getInstance().execute(r);
     }
 
     @Override
@@ -169,5 +207,22 @@ public class MainActivity extends ReactActivity {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean(REJECTED_ROOTED_NOTIFICATION, true);
         editor.commit();
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    public void requestPermissions(String[] permissions, int requestCode, PermissionListener listener) {
+        mPermissionListener = listener;
+        requestPermissions(permissions, requestCode);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (mPermissionListener != null && mPermissionListener.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
+            mPermissionListener = null;
+        }
+        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // Permission has been granted. Start camera preview Activity.
+            com.github.alinz.reactnativewebviewbridge.WebViewBridgeManager.grantAccess(requestCode);
+        }
     }
 }
