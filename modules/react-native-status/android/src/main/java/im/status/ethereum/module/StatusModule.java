@@ -643,7 +643,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
 
     @ReactMethod
     public void recoverAccount(final String passphrase, final String password, final Callback callback) {
-        Log.d(TAG, "recoverAccount");
+        Log.i(TAG, "FOO android native code! recoverAccount");
         if (!checkAvailability()) {
             callback.invoke(false);
             return;
@@ -652,6 +652,7 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
             @Override
             public void run() {
                 String res = Statusgo.recoverAccount(password, passphrase);
+				Log.i(TAG, "FOO android native code! recoverAccount returned res=" + res);
 
                 callback.invoke(res);
             }

@@ -733,7 +733,8 @@
     "custom-networks": "Custom networks",
     "wallet-insufficient-funds": "Insufficient funds",
     "currency-display-name-ils": "Israel Shekel",
-    "sign-in-to-another": "Sign in to another account",
+    "enter-your-recovery-phrase": "Enter your recovery phrase",
+    "enter-your-recovery-phrase-explainer": "Enter your recovery phrase, separate the words by single spaces",
     "currency-display-name-crc": "Costa Rica Colon",
     "help-center": "Help Center",
     "currency-display-name-mwk": "Malawian Kwacha",
@@ -1180,5 +1181,13 @@
     "keycard-recovery-phrase-confirmation-text": "You cannot do this later. Without the Seed phrase you will not be able to access your key or any assets associated with it if you loose your device.",
     "keycard-recovery-phrase-confirm-header": "Confirm “Seed” phrase",
     "keycard-cancel-setup-title": "Dangerous operation",
-    "keycard-cancel-setup-text": "This will cancel keycard setup. It's highly recommended to finish the setup in order to use keycard. Do you really want to cancel?"
+    "keycard-cancel-setup-text": "This will cancel keycard setup. It's highly recommended to finish the setup in order to use keycard. Do you really want to cancel?",
+    "recovery-key-recovered-title": "Your key has been successfully recovered",
+    "recovery-key-recovered-explainer": "You will have to create a new code or password to re-encrypt your key",
+    "recovery-reencrypt-key": "Re-encrypt your key",
+    "recovery-create-pin-title": "Create a 6-digit code",
+    "recovery-create-pin-description": "To re-encrypt your key",
+    "recovery-create-pin-description2": "You'll need this code to open Status and sign transactions",
+    "recovery-encrypt-with-password": "Encrypt with password",
+	"recovery-confirm-pin-title": "Confirm the code"
 }

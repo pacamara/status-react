@@ -16,7 +16,7 @@ let
   sha256 = extractStatusGoConfig ../../STATUS_GO_SHA256;
   repo = "status-go";
   rev = version;
-  goPackagePath = "github.com/${owner}/${repo}";
+  goPackagePath = "github.com/status-im/${repo}";
   src = fetchFromGitHub { inherit rev owner repo sha256; name = "${repo}-source"; };
 
   mobileConfigs = {

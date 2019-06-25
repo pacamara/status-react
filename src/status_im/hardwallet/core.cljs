@@ -396,13 +396,13 @@
     (fx/merge cofx
               {:db (assoc-in db [:hardwallet :flow] :import)}
               (navigation/navigate-to-cofx :hardwallet-authentication-method nil))
-    (accounts.recover/navigate-to-recover-account-screen cofx)))
+    (accounts.recover/navigate-to-recover-account-screen cofx 1)))
 
 (fx/defn password-option-pressed
   [{:keys [db] :as cofx}]
   (if (= (get-in db [:hardwallet :flow]) :create)
     (accounts.create/navigate-to-create-account-screen cofx)
-    (accounts.recover/navigate-to-recover-account-screen cofx)))
+    (accounts.recover/navigate-to-recover-account-screen cofx 1)))
 
 (defn settings-screen-did-load
   [{:keys [db]}]

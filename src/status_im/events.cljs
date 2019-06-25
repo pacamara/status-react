@@ -50,6 +50,7 @@
             status-im.wallet.accounts.core
             [status-im.ui.components.bottom-sheet.core :as bottom-sheet]
             [status-im.ui.components.react :as react]
+            [status-im.ui.screens.accounts.recover.views :as accounts.recover.ui]
             [status-im.ui.screens.add-new.new-chat.db :as new-chat.db]
             [status-im.ui.screens.currency-settings.models
              :as
@@ -307,24 +308,25 @@
    (accounts.recover/validate-password cofx)))
 
 (handlers/register-handler-fx
- :accounts.recover.ui/sign-in-button-pressed
- [(re-frame/inject-cofx :random-guid-generator)]
- (fn [cofx _]
-   (accounts.recover/recover-account-with-checks cofx)))
-
-(handlers/register-handler-fx
  :accounts.recover.ui/recover-account-confirmed
  [(re-frame/inject-cofx :random-guid-generator)]
  (fn [cofx _]
    (accounts.recover/recover-account cofx)))
 
 (handlers/register-handler-fx
+ :accounts.recover.ui/recover-account-enter-pin
+ [(re-frame/inject-cofx :random-guid-generator)]
+ (fn [cofx _]
+   (accounts.recover/navigate-to-recover-account-screen cofx 3)))
+
+(handlers/register-handler-fx
  :accounts.recover.callback/recover-account-success
  [(re-frame/inject-cofx :random-guid-generator)
   (re-frame/inject-cofx :accounts.create/get-signing-phrase)
   (re-frame/inject-cofx :accounts.create/get-status)]
- (fn [cofx [_ result password]]
-   (accounts.recover/on-account-recovered cofx result password)))
+ (fn [cofx [_ result password address]]
+   ;;(accounts.recover/on-account-recovered cofx result password)))
+   (accounts.recover/navigate-to-recover-account-screen (assoc cofx :address address) 2)))
 
 ;; accounts login module
 

@@ -9,6 +9,7 @@
             [status-im.node.core :as node]
             [status-im.ui.screens.navigation :as navigation]
             [status-im.utils.fx :as fx]
+            [taoensso.timbre :as log]
             [status-im.utils.identicon :as identicon]
             [status-im.utils.security :as security]
             [status-im.utils.types :as types]))
@@ -35,8 +36,9 @@
      ;; don't want secure data to be printed
      (let [data (-> (types/json->clj result)
                     (dissoc :mnemonic)
-                    (types/clj->json))]
-       (re-frame/dispatch [:accounts.recover.callback/recover-account-success data password])))))
+                    (types/clj->json))
+           address ((types/json->clj result) :address)]
+       (re-frame/dispatch [:accounts.recover.callback/recover-account-success data password address])))))
 
 (fx/defn set-phrase
   [{:keys [db]} masked-recovery-phrase]
@@ -110,21 +112,15 @@
             (assoc :accounts/new-installation-id (random-guid-generator)))}
    (node/initialize nil)))
 
-(fx/defn recover-account-with-checks [{:keys [db] :as cofx}]
-  (let [{:keys [passphrase processing?]} (:accounts/recover db)]
-    (when-not processing?
-      (if (mnemonic/status-generated-phrase? passphrase)
-        (recover-account cofx)
-        {:ui/show-confirmation
-         {:title               (i18n/label :recovery-typo-dialog-title)
-          :content             (i18n/label :recovery-typo-dialog-description)
-          :confirm-button-text (i18n/label :recovery-confirm-phrase)
-          :on-accept           #(re-frame/dispatch [:accounts.recover.ui/recover-account-confirmed])}}))))
-
-(fx/defn navigate-to-recover-account-screen [{:keys [db] :as cofx}]
+(fx/defn navigate-to-recover-account-screen [{:keys [db] :as cofx} phase]
   (fx/merge cofx
             {:db (dissoc db :accounts/recover)}
-            (navigation/navigate-to-cofx :recover nil)))
+            (navigation/navigate-to-cofx :recover (assoc cofx :phase phase))))
+
+(fx/defn navigate-to-enter-pin-screen [{:keys [db] :as cofx}]
+  (fx/merge cofx
+            {:db (dissoc db :accounts/recover)}
+            (navigation/navigate-to-cofx :recover-enter-pin nil)))
 
 (re-frame/reg-fx
  :accounts.recover/recover-account
